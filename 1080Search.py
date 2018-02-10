@@ -12,7 +12,7 @@ melonChartList = soup.select(
 findText = '1080'
 for i in melonChartList :
     resultText = ''.join(i.text.split())
-    if resultText.find(findText) > -1:
+    if findText in resultText:
         print(resultText)
         print('----------------------------')
 
