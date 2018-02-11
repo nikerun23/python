@@ -13,7 +13,7 @@ findText = '1080'
 for i in melonChartList :
     resultText = ''.join(i.text.split())
     if findText in resultText:
-        print(resultText)
         print('----------------------------')
+        print(resultText)
 
-
+print('----------------------------')
