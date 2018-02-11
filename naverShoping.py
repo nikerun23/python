@@ -12,6 +12,7 @@ lowPrice = soup.select(
 priceNum = lowPrice[0].text.replace(',', '')
 priceTarget = 200000
 
+print('현재 가격 :', priceNum)
 if int(priceNum) >= priceTarget:
     print('최저가가 아닙니다.')
 else:
