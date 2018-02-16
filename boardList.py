@@ -49,6 +49,6 @@ for i in boardList:
 
     if (title.find('연구') + title.find('사업')) < -1:
         continue
-    print(title, dateStr)
-    # if yesterdayCheck(yesterdayList, dateStr):
-    #     print(title, dateStr)
+
+    if yesterdayCheck(yesterdayList, dateStr):
+        print(title, dateStr)
