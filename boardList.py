@@ -12,8 +12,8 @@ def getYesterdayList():
         yesterdayList.append(yesterday - datetime.timedelta(days=1))
         yesterdayList.append(yesterday - datetime.timedelta(days=2))
 
-    print(yesterday, dayOfWeek[yesterday.weekday()])
-    print(yesterdayList)
+    print('전일 :', yesterday, dayOfWeek[yesterday.weekday()])
+    print('크롤링 날짜 :', yesterdayList)
     print('------------------------------------------------------------------------------------------------')
     return yesterdayList
 
@@ -47,5 +47,8 @@ for i in boardList:
     for z in dateList:
         dateStr = z.text
 
-    if yesterdayCheck(yesterdayList, dateStr):
-        print(title, dateStr)
+    if (title.find('연구') + title.find('사업')) < -1:
+        continue
+    print(title, dateStr)
+    # if yesterdayCheck(yesterdayList, dateStr):
+    #     print(title, dateStr)
