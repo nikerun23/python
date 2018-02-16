@@ -2,8 +2,17 @@ import requests
 from bs4 import BeautifulSoup as bs
 import datetime
 
+def findTitle(title):
+    findList = ['연구', '사업']
+    result = False
+    for t in findList:
+        if title.find(t) >= 0:
+            return True
+    return result
+
+
 def getYesterdayList():
-    yesterday = datetime.date.today() - datetime.timedelta(days=1)
+    yesterday = datetime.date.today() - datetime.timedelta(days=3)
     dayOfWeek = ['월', '화', '수', '목', '금', '토', '일']
     yesterdayList = [yesterday]
 
@@ -47,7 +56,7 @@ for i in boardList:
     for z in dateList:
         dateStr = z.text
 
-    if (title.find('연구') + title.find('사업')) < -1:
+    if not findTitle(title):
         continue
 
     if yesterdayCheck(yesterdayList, dateStr):
