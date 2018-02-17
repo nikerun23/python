@@ -12,7 +12,7 @@ def findTitle(title):
 
 
 def getYesterdayList():
-    yesterday = datetime.date.today() - datetime.timedelta(days=3)
+    yesterday = datetime.date.today() - datetime.timedelta(days=1)
     dayOfWeek = ['월', '화', '수', '목', '금', '토', '일']
     yesterdayList = [yesterday]
 
