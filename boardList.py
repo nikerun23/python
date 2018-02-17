@@ -16,7 +16,7 @@ def getYesterdayList():
     dayOfWeek = ['월', '화', '수', '목', '금', '토', '일']
     yesterdayList = [yesterday]
 
-    # yesterday가 일요일일 경우 전 주 금요일까지 조회
+    # yesterday가 일요일 경우 전 주 금요일까지 조회
     if '일' == dayOfWeek[yesterday.weekday()]:
         yesterdayList.append(yesterday - datetime.timedelta(days=1))
         yesterdayList.append(yesterday - datetime.timedelta(days=2))
@@ -35,22 +35,28 @@ def yesterdayCheck(dayList, boardDay):
             result = True
     return result
 
+
+
+
 yesterdayList = getYesterdayList()
 
 url = 'https://www.nrf.re.kr/biz/notice/list?menu_no=44'
-selectStr = 'div.board_list tbody > tr'
+selectTR = 'div.board_list tbody > tr'
+selectTitle = 'a.ntsviewBtn'
+selectDate = 'td:nth-of-type(4)'
+
 req = requests.get(url)
 html = req.text
 soup = bs(html, 'lxml')
 boardList = soup.select(
-    selectStr
+    selectTR
 )
 
 for i in boardList:
     title = ''
     dateStr = ''
-    titleList = i.select('a.ntsviewBtn')
-    dateList = i.select('td:nth-of-type(4)')
+    titleList = i.select(selectTitle)
+    dateList = i.select(selectDate)
     for y in titleList:
         title = y.text
     for z in dateList:
