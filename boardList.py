@@ -5,14 +5,17 @@ import csv
 
 def getCSV():
     csv_reader = csv.DictReader(open('csv/url_list.csv'))
-    print(csv_reader.fieldnames)
+    csvList = []
     for row in csv_reader.reader:
+        if row[2] == 'URL': continue
         csvDict = {'url': row[2]
             , 'selectTR': row[3]
             , 'selectTitle': row[4]
             , 'selectDate': row[5]
             ,'linkUrl': row[6]}
-    return csvDict
+        csvList.append(csvDict)
+    print(csvList)
+    return csvList
 
 def findTitle(title):
     findList = ['연구', '사업']
@@ -50,33 +53,35 @@ def yesterdayCheck(dayList, boardDay):
 
 
 yesterdayList = getYesterdayList()
-csvDict = getCSV()
-url = csvDict['url']
-selectTR = csvDict['selectTR']
-selectTitle = csvDict['selectTitle']
-selectDate = csvDict['selectDate']
-linkUrl = csvDict['linkUrl']
+csvList = getCSV()
 
-req = requests.get(url)
-html = req.text
-soup = bs(html, 'lxml')
-boardList = soup.select(
-    selectTR
-)
+for csvDict in csvList:
+    url = csvDict['url']
+    selectTR = csvDict['selectTR']
+    selectTitle = csvDict['selectTitle']
+    selectDate = csvDict['selectDate']
+    linkUrl = csvDict['linkUrl']
 
-for i in boardList:
+    req = requests.get(url)
+    html = req.text
+    soup = bs(html, 'lxml')
+    boardList = soup.select(
+        selectTR
+    )
 
-    title = ''
-    dateStr = ''
-    boardNo = ''
-    titleList = i.select(selectTitle)
-    title = titleList[0].text
-    boardNo = titleList[0].get('data-nts_no')
-    dateList = i.select(selectDate)
-    dateStr = dateList[0].text
+    for i in boardList:
 
-    if not findTitle(title):
-        continue
+        title = ''
+        dateStr = ''
+        boardNo = ''
+        titleList = i.select(selectTitle)
+        title = titleList[0].text
+        boardNo = titleList[0].get('data-nts_no')
+        dateList = i.select(selectDate)
+        dateStr = dateList[0].text
 
-    if yesterdayCheck(yesterdayList, dateStr):
-        print(boardNo, title, dateStr,'\n',linkUrl.format(boardNo=boardNo))
+        if not findTitle(title):
+            continue
+
+        if yesterdayCheck(yesterdayList, dateStr):
+            print(boardNo, title, dateStr,'\n',linkUrl.format(boardNo=boardNo))
