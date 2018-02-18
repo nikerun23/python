@@ -8,13 +8,16 @@ def getCSV():
     csvList = []
     for row in csv_reader.reader:
         if row[2] == 'URL': continue
-        csvDict = {'url': row[2]
+        if row[2] == '': break
+        csvDict = {'department': row[1]
+            , 'url': row[2]
             , 'selectTR': row[3]
             , 'selectTitle': row[4]
             , 'selectDate': row[5]
             ,'linkUrl': row[6]}
         csvList.append(csvDict)
     print(csvList)
+    print('csvList :',len(csvList))
     return csvList
 
 def findTitle(title):
@@ -49,39 +52,51 @@ def yesterdayCheck(dayList, boardDay):
             result = True
     return result
 
+def getBoardNo(siteName, tr):
+    result = ''
+    if '한국연구재단' == siteName:
+        titleList = tr.select('a.ntsviewBtn')
+        result = titleList[0].get('data-nts_no')
+        return result
+    else: return result
 
+def printBoard(csvList):
+    for csvDict in csvList:
+        department = csvDict['department']
+        url = csvDict['url']
+        selectTR = csvDict['selectTR']
+        selectTitle = csvDict['selectTitle']
+        selectDate = csvDict['selectDate']
+        linkUrl = csvDict['linkUrl']
 
+        req = requests.get(url)
+        html = req.text
+        soup = bs(html, 'lxml')
+        boardList = soup.select(
+            selectTR
+        )
+
+        for tr in boardList:
+
+            title = ''
+            dateStr = ''
+            boardNo = ''
+            titleList = tr.select(selectTitle)
+            title = titleList[0].text
+            ##boardNo = titleList[0].get('data-nts_no')
+            boardNo = getBoardNo(department,tr)
+            dateList = tr.select(selectDate)
+            dateStr = dateList[0].text
+
+            if not findTitle(title):
+                continue
+
+            if yesterdayCheck(yesterdayList, dateStr):
+                print(boardNo, title, dateStr,'\n',linkUrl.format(boardNo=boardNo))
+
+## ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+## ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 yesterdayList = getYesterdayList()
 csvList = getCSV()
-
-for csvDict in csvList:
-    url = csvDict['url']
-    selectTR = csvDict['selectTR']
-    selectTitle = csvDict['selectTitle']
-    selectDate = csvDict['selectDate']
-    linkUrl = csvDict['linkUrl']
-
-    req = requests.get(url)
-    html = req.text
-    soup = bs(html, 'lxml')
-    boardList = soup.select(
-        selectTR
-    )
-
-    for i in boardList:
-
-        title = ''
-        dateStr = ''
-        boardNo = ''
-        titleList = i.select(selectTitle)
-        title = titleList[0].text
-        boardNo = titleList[0].get('data-nts_no')
-        dateList = i.select(selectDate)
-        dateStr = dateList[0].text
-
-        if not findTitle(title):
-            continue
-
-        if yesterdayCheck(yesterdayList, dateStr):
-            print(boardNo, title, dateStr,'\n',linkUrl.format(boardNo=boardNo))
+printBoard(csvList)
