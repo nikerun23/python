@@ -4,7 +4,6 @@ import datetime
 import csv
 
 def getCSV():
-    csvDict = {}
     csv_reader = csv.DictReader(open('csv/url_list.csv'))
     print(csv_reader.fieldnames)
     for row in csv_reader.reader:
@@ -71,14 +70,11 @@ for i in boardList:
     dateStr = ''
     boardNo = ''
     titleList = i.select(selectTitle)
+    title = titleList[0].text
+    boardNo = titleList[0].get('data-nts_no')
     dateList = i.select(selectDate)
-    ##print(aList)
-    for y in titleList:
-        title = y.text
-        boardNo = y.get('data-nts_no')
+    dateStr = dateList[0].text
 
-    for z in dateList:
-        dateStr = z.text
     if not findTitle(title):
         continue
 
