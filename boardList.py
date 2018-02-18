@@ -1,6 +1,16 @@
 import requests
 from bs4 import BeautifulSoup as bs
 import datetime
+import csv
+
+csv_reader = csv.DictReader(open('csv/url_list.csv'))
+print(csv_reader.fieldnames)
+for row in csv_reader.reader:
+    url = row[2]
+    selectTR = row[3]
+    selectTitle = row[4]
+    selectDate = row[5]
+    linkUrl = row[6]
 
 def findTitle(title):
     findList = ['연구', '사업']
@@ -9,7 +19,6 @@ def findTitle(title):
         if title.find(t) >= 0:
             return True
     return result
-
 
 def getYesterdayList():
     yesterday = datetime.date.today() - datetime.timedelta(days=5)
@@ -40,11 +49,11 @@ def yesterdayCheck(dayList, boardDay):
 
 yesterdayList = getYesterdayList()
 
-url = 'https://www.nrf.re.kr/biz/notice/list?menu_no=44'
-selectTR = 'div.board_list tbody > tr'
-selectTitle = 'a.ntsviewBtn'
-selectDate = 'td:nth-of-type(4)'
-linkUrl = 'https://www.nrf.re.kr/biz/notice/view?nts_no={boardNo}&menu_no=44&biz_no=&search_type=&search_keyword=&page='
+# url = 'https://www.nrf.re.kr/biz/notice/list?menu_no=44'
+# selectTR = 'div.board_list tbody > tr'
+# selectTitle = 'a.ntsviewBtn'
+# selectDate = 'td:nth-of-type(4)'
+# linkUrl = 'https://www.nrf.re.kr/biz/notice/view?nts_no={boardNo}&menu_no=44&biz_no=&search_type=&search_keyword=&page='
 
 req = requests.get(url)
 html = req.text
