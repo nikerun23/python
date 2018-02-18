@@ -12,7 +12,7 @@ def findTitle(title):
 
 
 def getYesterdayList():
-    yesterday = datetime.date.today() - datetime.timedelta(days=1)
+    yesterday = datetime.date.today() - datetime.timedelta(days=5)
     dayOfWeek = ['월', '화', '수', '목', '금', '토', '일']
     yesterdayList = [yesterday]
 
@@ -44,6 +44,7 @@ url = 'https://www.nrf.re.kr/biz/notice/list?menu_no=44'
 selectTR = 'div.board_list tbody > tr'
 selectTitle = 'a.ntsviewBtn'
 selectDate = 'td:nth-of-type(4)'
+linkUrl = 'https://www.nrf.re.kr/biz/notice/view?nts_no={boardNo}&menu_no=44&biz_no=&search_type=&search_keyword=&page='
 
 req = requests.get(url)
 html = req.text
@@ -53,17 +54,21 @@ boardList = soup.select(
 )
 
 for i in boardList:
+
     title = ''
     dateStr = ''
+    boardNo = ''
     titleList = i.select(selectTitle)
     dateList = i.select(selectDate)
+    ##print(aList)
     for y in titleList:
         title = y.text
+        boardNo = y.get('data-nts_no')
+
     for z in dateList:
         dateStr = z.text
-
     if not findTitle(title):
         continue
 
     if yesterdayCheck(yesterdayList, dateStr):
-        print(title, dateStr)
+        print(boardNo, title, dateStr,'\n',linkUrl.format(boardNo=boardNo))
