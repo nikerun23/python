@@ -28,6 +28,13 @@ def findTitle(title):
             return True
     return result
 
+def validDateStr(dateStr):
+    dateStr = dateStr.replace(' ', '').replace(',', '-').replace('.', '-')
+    if dateStr[-1] == '-':
+        dateStr = dateStr[:-1]
+    ##print('dateStr:', dateStr)
+    return dateStr
+
 def getYesterdayList():
     yesterday = datetime.date.today() - datetime.timedelta(days=5)
     dayOfWeek = ['월', '화', '수', '목', '금', '토', '일']
@@ -44,7 +51,9 @@ def getYesterdayList():
     return yesterdayList
 
 def yesterdayCheck(dayList, boardDay):
+    if boardDay == '': return False
     result = False
+    boardDay = validDateStr(boardDay)
     dateTimeStr = datetime.datetime.strptime(boardDay, '%Y-%m-%d')
     dateType = datetime.date(dateTimeStr.year, dateTimeStr.month, dateTimeStr.day)
     for yesterday in dayList:
@@ -63,6 +72,8 @@ def getBoardNo(siteName, tr):
 def printBoard(csvList):
     for csvDict in csvList:
         department = csvDict['department']
+        print('----------------------------------------------------')
+        print(department)
         url = csvDict['url']
         selectTR = csvDict['selectTR']
         selectTitle = csvDict['selectTitle']
