@@ -10,7 +10,7 @@ lowPrice = soup.select(
 )
 
 priceNum = lowPrice[0].text.replace(',', '')
-priceTarget = 200000
+priceTarget = 170000
 
 print('현재 가격 :', priceNum)
 if int(priceNum) >= priceTarget:
