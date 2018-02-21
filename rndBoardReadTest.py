@@ -1,15 +1,10 @@
 import requests
 from bs4 import BeautifulSoup as bs
 
-csvDict = {'url': 'http://www.nipa.kr/biz/bizNotice.it?menuNo=18&page=1'
-            , 'selectTR': 'table.boardList > tbody > tr'
-            , 'selectTitle': 'td.title > a'
-            , 'selectDate': 'td.date'}
-
-url = csvDict['url']
-selectTR = csvDict['selectTR']
-selectTitle = csvDict['selectTitle']
-selectDate = csvDict['selectDate']
+url = 'https://www.kofac.re.kr/?page_id=1672'
+selectTR = 'div.kboard-list table.list > tbody > tr'
+selectTitle = 'td.kboard-list-title a'
+selectDate = 'td.kboard-list-date'
 
 req = requests.get(url)
 html = req.text
