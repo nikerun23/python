@@ -21,7 +21,7 @@ def getCSV():
     return csvList
 
 def findTitle(title):
-    findList = ['연구', '사업']
+    findList = ['연구', '사업', '과제']
     result = False
     for t in findList:
         if title.find(t) >= 0:
