@@ -1,13 +1,15 @@
 import requests
 from bs4 import BeautifulSoup as bs
 
-url = 'https://www.kofac.re.kr/?page_id=1672'
-selectTR = 'div.kboard-list table.list > tbody > tr'
-selectTitle = 'td.kboard-list-title a'
-selectDate = 'td.kboard-list-date'
+url = 'http://www.keri.re.kr/_prog/_board/?code=sub0501&site_dvs_cd=kr&menu_dvs_cd=0501'
+selectTR = 'div.board_list table > tbody > tr'
+selectTitle = 'td.title a'
+selectDate = 'td:nth-of-type(3)'
 
 req = requests.get(url)
+req.encoding = 'utf-8'
 html = req.text
+
 soup = bs(html, 'lxml')
 boardList = soup.select(
     selectTR
