@@ -1,20 +1,21 @@
 import requests
 from bs4 import BeautifulSoup as bs
 
-url = 'http://www.keri.re.kr/_prog/_board/?code=sub0501&site_dvs_cd=kr&menu_dvs_cd=0501'
-selectTR = 'div.board_list table > tbody > tr'
-selectTitle = 'td.title a'
+url = 'http://www.kei.re.kr/home/board/bidding/list.kei'
+selectTR = 'table#dataList > tbody > tr'
+selectTitle = 'td.tl a'
 selectDate = 'td:nth-of-type(3)'
 
 req = requests.get(url)
-req.encoding = 'utf-8'
+# req.encoding = 'utf-8'
+# req.encoding = 'euc-kr'
 html = req.text
 
 soup = bs(html, 'lxml')
 boardList = soup.select(
     selectTR
 )
-
+# print(boardList)
 for i in boardList:
 
     title = ''
