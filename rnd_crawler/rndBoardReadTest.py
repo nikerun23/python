@@ -1,10 +1,10 @@
 import requests
 from bs4 import BeautifulSoup as bs
 
-url = 'http://www.kei.re.kr/home/board/bidding/list.kei'
-selectTR = 'table#dataList > tbody > tr'
-selectTitle = 'td.tl a'
-selectDate = 'td:nth-of-type(3)'
+url = 'https://plus.auri.go.kr/post/support-business'
+selectTR = 'table.list > tbody > tr'
+selectTitle = 'td.subject a'
+selectDate = 'td:nth-of-type(5)'
 
 req = requests.get(url)
 # req.encoding = 'utf-8'

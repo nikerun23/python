@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup as bs
 
-req = requests.get('http://www.kei.re.kr/home/board/notice/list.kei')
+req = requests.get('https://plus.auri.go.kr/post/support-business')
 # req.encoding = 'utf-8'
 html = req.text
 
