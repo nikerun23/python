@@ -1,13 +1,35 @@
 import datetime
 
+def validDateStr(dateStr):
+    print('inString:',dateStr)
+    if dateStr in ('', None):
+        print('return')
+        return None
+    dateStr = dateStr.replace(' ', '').replace(',', '-').replace('.', '-').replace('/', '-')
 
-dateTemp = '2017.01. 1.'
-dateTemp = dateTemp.replace(' ', '').replace(',', '-').replace('.', '-')
-print(dateTemp)
-if dateTemp[-1] == '-':
-    dateTemp = dateTemp[:-1]
-print(dateTemp)
+    if dateStr[-1] == '-':
+        dateStr = dateStr[:-1]
 
-dateTimeStr = datetime.datetime.strptime(dateTemp, '%Y-%m-%d')
-dateType = datetime.date(dateTimeStr.year, dateTimeStr.month, dateTimeStr.day)
-print(dateType)
+    # datetime 객체로 변환
+    dateTimeStr = datetime.datetime.strptime(dateStr, '%Y-%m-%d')
+    dateType = datetime.date(dateTimeStr.year, dateTimeStr.month, dateTimeStr.day)
+    return dateType
+
+dateTemp = [
+    '2017-01-01',
+    '2017/01/01',
+    '2017-01-01',
+    '2017.01.01.',
+    '2017. 01. 01.',
+    '2017. 01.01',
+    '2017. 1.01.',
+    '2017.1.1',
+    '',
+    None
+    ]
+
+for dt in dateTemp:
+    dateTime = validDateStr(dt)
+    print('outDate:', dateTime)
+    print('---------------------')
+
