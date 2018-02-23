@@ -3,7 +3,7 @@ import datetime
 def validDateStr(dateStr):
     print('inString:',dateStr)
     if dateStr in ('', None):
-        print('return')
+        print('return CALL')
         return None
     dateStr = dateStr.replace(' ', '').replace(',', '-').replace('.', '-').replace('/', '-')
 
@@ -19,6 +19,8 @@ dateTemp = [
     '2017-01-01',
     '2017/01/01',
     '2017-01-01',
+    '2017,01,01',
+    '2017.01.01',
     '2017.01.01.',
     '2017. 01. 01.',
     '2017. 01.01',
