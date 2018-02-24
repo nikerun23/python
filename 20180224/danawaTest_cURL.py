@@ -18,7 +18,7 @@ data = [
   ('redirectUrl', 'http://cws.danawa.com/point/index.php'),
   ('loginMemberType', 'general'),
   ('id', 'hyunkeun'),
-  ('password', 'wlsldjtm23'),
+  ('password', '암호'),
 ]
 
 s = requests.Session()

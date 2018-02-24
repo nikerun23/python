@@ -6,7 +6,7 @@ url = 'https://www.inflearn.com/wp-login.php'
 s = requests.Session()
 
 s.post(url, data={'log': 'nikerun23',
-                  'pwd': 'wlsldjtm23'
+                  'pwd': '암호'
                   }
        )
 

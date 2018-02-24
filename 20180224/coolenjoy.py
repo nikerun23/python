@@ -18,7 +18,7 @@ headers = {
 
 data = [
   ('mb_id', 'hyunkeun'),
-  ('mb_password', 'tkanf'),
+  ('mb_password', '암호'),
 ]
 
 ss = requests.Session() # Session 객체에 헤더 추가

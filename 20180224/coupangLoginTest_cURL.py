@@ -16,7 +16,7 @@ headers = {
 
 data = [
   ('email', 'leehyunkeun@hanmail.net'),
-  ('password', 'wlsldjtm23'),
+  ('password', '암호'),
   ('rememberMe', 'false'),
   ('token', ''),
   ('captchaAnswer', '')

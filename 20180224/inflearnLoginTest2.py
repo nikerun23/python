@@ -12,7 +12,7 @@ headers = {
 s.headers = headers # Session 객체에 헤더 추가
 
 s.post(url, data={'log': 'nikerun23',
-                  'pwd': 'wlsldjtm23'
+                  'pwd': '암호'
                   }
        )
 

@@ -17,7 +17,7 @@ headers = {
 
 data = [
   ('log', 'nikerun23'),
-  ('pwd', 'wlsldjtm23'),
+  ('pwd', '암호'),
   ('user-submit', '\uB85C\uADF8\uC778'),
   ('user-cookie', '1'),
 ]
