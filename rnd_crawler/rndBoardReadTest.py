@@ -21,11 +21,11 @@ for i in boardList:
     title = ''
     dateStr = ''
     boardNo = ''
-    titleList = i.select(selectTitle)
-    title = titleList[0].text
+    titleList = i.select_one(selectTitle)
+    title = titleList.text
     boardNo = ''
-    dateList = i.select(selectDate)
-    dateStr = dateList[0].text
+    dateList = i.select_one(selectDate)
+    dateStr = dateList.text
 
     print(boardNo, title, dateStr)
 
