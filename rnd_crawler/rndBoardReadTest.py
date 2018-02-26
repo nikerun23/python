@@ -1,16 +1,16 @@
 import requests
 from bs4 import BeautifulSoup as bs
 
-url = 'https://plus.auri.go.kr/post/support-business'
-selectTR = 'table.list > tbody > tr'
-selectTitle = 'td.subject a'
-selectDate = 'td:nth-of-type(5)'
+url = 'http://dsmi.re.kr/notice01?bc_seq=1'
+selectTR = 'table.board-list > tbody > tr'
+selectTitle = 'td.tdleft a'
+selectDate = 'td:nth-of-type(4)'
 
 req = requests.get(url)
 # req.encoding = 'utf-8'
 # req.encoding = 'euc-kr'
 html = req.text
-
+# print(html)
 soup = bs(html, 'lxml')
 boardList = soup.select(
     selectTR
