@@ -2,9 +2,9 @@ import requests
 from bs4 import BeautifulSoup as bs
 
 url = 'https://www.kista.re.kr/usr/com/prm/BBSList.do?bbsId=BBSMSTR_000000000203&menuNo=10000'
-selectTR = 'div.board_list tbody > tr'
-selectTitle = 'td a.ntsviewBtn'
-selectDate = 'td:nth-of-type(5)'
+select_tr = 'div.board_list tbody > tr'
+select_title = 'td a.ntsviewBtn'
+select_date = 'td:nth-of-type(5)'
 
 headers = {
     'Accept-Encoding': 'gzip, deflate, br',

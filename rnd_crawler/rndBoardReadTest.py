@@ -1,10 +1,10 @@
 import requests
 from bs4 import BeautifulSoup as bs
 
-url = 'http://dsmi.re.kr/notice01?bc_seq=1'
-selectTR = 'table.board-list > tbody > tr'
-selectTitle = 'td.tdleft a'
-selectDate = 'td:nth-of-type(4)'
+url = 'http://www.mohw.go.kr/react/al/sal0201ls.jsp?PAR_MENU_ID=04&MENU_ID=0402'
+select_tr = 'div.board_list table > tbody > tr'
+select_title = 'td.ta_l a'
+select_date = 'td:nth-of-type(3)'
 
 req = requests.get(url)
 # req.encoding = 'utf-8'
@@ -12,20 +12,17 @@ req = requests.get(url)
 html = req.text
 # print(html)
 soup = bs(html, 'lxml')
-boardList = soup.select(
-    selectTR
+board_list = soup.select(
+    select_tr
 )
 # print(boardList)
-for i in boardList:
+for i in board_list:
 
-    title = ''
-    dateStr = ''
-    boardNo = ''
-    titleList = i.select_one(selectTitle)
-    title = titleList.text
-    boardNo = ''
-    dateList = i.select_one(selectDate)
-    dateStr = dateList.text
+    title_list = i.select_one(select_title)
+    title = title_list.text
+    board_no = ''
+    date_list = i.select_one(select_date)
+    date_str = date_list.text
 
-    print(boardNo, title, dateStr)
+    print(board_no, title, date_str)
 

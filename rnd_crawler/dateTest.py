@@ -1,21 +1,22 @@
 import datetime
 
-def validDateStr(dateStr):
-    print('inString:',dateStr)
-    if dateStr in ('', None):
+def validDateStr(date_str):
+    date_str = date_str.strip()
+    print('inString:', date_str)
+    if date_str in ('', None):
         print('return CALL')
         return None
-    dateStr = dateStr.replace(' ', '').replace(',', '-').replace('.', '-').replace('/', '-')
+    date_str = date_str.replace(' ', '').replace(',', '-').replace('.', '-').replace('/', '-')
 
-    if dateStr[-1] == '-':
-        dateStr = dateStr[:-1]
+    if date_str[-1] == '-':
+        date_str = date_str[:-1]
 
     # datetime 객체로 변환
-    dateTimeStr = datetime.datetime.strptime(dateStr, '%Y-%m-%d')
-    dateType = datetime.date(dateTimeStr.year, dateTimeStr.month, dateTimeStr.day)
-    print('outDate:', dateType)
+    date_time_str = datetime.datetime.strptime(date_str, '%Y-%m-%d')
+    result = datetime.date(date_time_str.year, date_time_str.month, date_time_str.day)
+    print('outDate:', result)
     print('---------------------')
-    return dateType
+    return result
 
 dateTemp = [
     '2017-01-01',
@@ -33,5 +34,5 @@ dateTemp = [
     ]
 
 for dt in dateTemp:
-    dateTime = validDateStr(dt)
+    date_time = validDateStr(dt)
 
