@@ -13,6 +13,8 @@ def validDateStr(dateStr):
     # datetime 객체로 변환
     dateTimeStr = datetime.datetime.strptime(dateStr, '%Y-%m-%d')
     dateType = datetime.date(dateTimeStr.year, dateTimeStr.month, dateTimeStr.day)
+    print('outDate:', dateType)
+    print('---------------------')
     return dateType
 
 dateTemp = [
@@ -32,6 +34,4 @@ dateTemp = [
 
 for dt in dateTemp:
     dateTime = validDateStr(dt)
-    print('outDate:', dateTime)
-    print('---------------------')
 
