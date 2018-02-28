@@ -29,28 +29,31 @@ def yesterdayCheck(day_list, board_date):
     return result
 
 def validDate(date_str):
-    """날짜를 검증합니다"""
-    date_str = date_str.strip()
+    """ 날짜를 검증합니다 """
     if date_str in ('', None):
         return None
+    date_str = date_str.strip()
     date_str = date_str.replace(' ', '').replace(',', '-').replace('.', '-').replace('/', '-')
-
+    # 마지막 '-' 삭제
     if date_str[-1] == '-':
         date_str = date_str[:-1]
-
+    # '~'있을시에 앞 날짜만 추출
+    if date_str.find('~') != -1:
+        date_str = date_str[:date_str.find('~')]
+        date_str = date_str.replace('\n', '').replace('\t', '').strip()
     # datetime 객체로 변환
     date_time_str = datetime.datetime.strptime(date_str, '%Y-%m-%d')
     result = datetime.date(date_time_str.year, date_time_str.month, date_time_str.day)
     return result
 
 def validTitle(title_str):
-    """글제목을 검증합니다"""
+    """ 글제목을 검증합니다 """
     title_str = title_str.strip()
     title_str = title_str.replace('  ', '').replace('\t', '').replace('\n', '')
     return title_str
 
 def csvReadUrl(src):
-
+    """ csv파일을 읽습니다 """
     csv_reader = csv.DictReader(open(src, encoding='UTF8'))
     url_field_names = csv_reader.fieldnames
     url_dict_list = []
@@ -59,17 +62,13 @@ def csvReadUrl(src):
         url_dict = {}
         if 'X' == row[7]:  # Crawler
             continue
-        for index, h in enumerate(url_field_names):
-            url_dict[h] = row[index].strip()
+        for ii, h in enumerate(url_field_names):
+            url_dict[h] = row[ii].strip()
         url_dict_list.append(url_dict)
     return url_dict_list
 
 
 # +++++++++++ Util Area end +++++++++++++++++++++++++++++++++
-row_num = 10 - 2 # index 값 보정
-url_dict_list = csvReadUrl('csv/url_list.csv')
-print(url_dict_list[row_num])
-yesterday_list = getYesterdayList()
 
 def printRnD(csv_info):
     print(csv_info['부처'], '---', csv_info['기관'], '---------------------------------------')
@@ -92,24 +91,30 @@ def printRnD(csv_info):
     board_list = soup.select(
         select_tr
     )
+    if 'tr th' == etc_str: # th가 tr에 포함되어있을때
+        board_list = board_list[1:]
     # print(boardList)
-    for i in board_list:
-        title_list = i.select_one(select_title)
+    for tr in board_list:
+        title_list = tr.select_one(select_title)
         title = validTitle(title_list.text)
         board_no = ''
-        date_list = i.select_one(select_date)
+        date_list = tr.select_one(select_date)
         board_date = validDate(date_list.text) # datetime객체로 반환
         # 전일 공고만 출력
-        if yesterdayCheck(yesterday_list, board_date):
-            print(board_no, title, board_date)
+        # if yesterdayCheck(yesterday_list, board_date):
+        print(board_no, title, board_date)
     print('-----------------------------------------------------------------------')
+
+url_dict_list = csvReadUrl('csv/url_list.csv')
+yesterday_list = getYesterdayList()
+# yesterday_list = [datetime.date(2018, 2, 27)]
+# yesterday_list = [datetime.date(2018, 2, 27),datetime.date(2018, 2, 26)]
 
 for index, info in enumerate(url_dict_list):
     print('csv Row Num :',index + 2)
     printRnD(info)
 
-# printRnD(urlDictList[rowNum])
+row_num = 90 - 2 # index 값 보정
+# print(url_dict_list[row_num])
+# printRnD(url_dict_list[row_num])
 print('++++++++++++++++++++++ 조회 완료 ++++++++++++++++++++++')
-
-# for csvInfo in urlDictList:
-#     printRnD(csvInfo)
