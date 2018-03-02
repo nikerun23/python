@@ -22,7 +22,7 @@ def valid_date(date_str):
     try:
         date_time_str = datetime.datetime.strptime(date_str, '%Y-%m-%d')
     except Exception:
-        print('########## 날짜 양식에 문제가 있습니다 : ', date_str)
+        print('########## 날짜 양식에 문제가 있습니다 :', date_str)
         return None
     else:
         result = datetime.date(date_time_str.year, date_time_str.month, date_time_str.day)
@@ -34,6 +34,8 @@ def valid_date(date_str):
 
 def valid_title(title_str):
     """ 글제목을 검증합니다 """
+    if title_str is None:
+        return ''
     title_str = title_str.strip()
     title_str = title_str.replace('  ', '').replace('\t', '').replace('\n', '')
     return title_str
@@ -69,16 +71,19 @@ def yesterday_check(day_list, board_date):
 
 def csv_read_url(src):
     """ csv파일을 읽습니다 """
-    csv_reader = csv.DictReader(open(src, encoding='UTF8'))
-    url_field_names = csv_reader.fieldnames
     url_dict_list = []
-
-    for row in csv_reader.reader:
-        url_dict = {}
-        if 'X' == row[7]:  # Crawler
-            continue
-        for ii, h in enumerate(url_field_names):
-            url_dict[h] = row[ii].strip()
-        url_dict_list.append(url_dict)
+    try:
+        csv_reader = csv.DictReader(open(src, encoding='UTF8'))
+    except FileNotFoundError:
+        print('########## 파일을 찾을 수 없습니다 :', src)
+    else:
+        url_field_names = csv_reader.fieldnames
+        for row in csv_reader.reader:
+            url_dict = {}
+            if 'X' == row[7]:  # Crawler
+                continue
+            for ii, h in enumerate(url_field_names):
+                url_dict[h] = row[ii].strip()
+            url_dict_list.append(url_dict)
     return url_dict_list
 
