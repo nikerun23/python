@@ -1,7 +1,9 @@
 import datetime
+import csv
+
 
 def valid_date(date_str):
-    """날짜를 검증합니다"""
+    """날짜 양식을 검증합니다"""
     print('inString:', date_str)
     if date_str in ('', None):
         print('return CALL')
@@ -28,3 +30,55 @@ def valid_date(date_str):
     print('---------------------')
     print(type(result))
     return result
+
+
+def valid_title(title_str):
+    """ 글제목을 검증합니다 """
+    title_str = title_str.strip()
+    title_str = title_str.replace('  ', '').replace('\t', '').replace('\n', '')
+    return title_str
+
+
+def get_yesterday_list():
+    """ 전일 날짜를 구합니다 """
+    yesterday = datetime.date.today() - datetime.timedelta(days=1)
+    day_of_week = ['월', '화', '수', '목', '금', '토', '일']
+    yesterday_list = [yesterday]
+
+    # yesterday가 일요일 경우 전 주 금요일까지 조회
+    if '일' == day_of_week[yesterday.weekday()]:
+        yesterday_list.append(yesterday - datetime.timedelta(days=1))
+        yesterday_list.append(yesterday - datetime.timedelta(days=2))
+
+    print('전일 :', yesterday, day_of_week[yesterday.weekday()])
+    print('크롤링 날짜 :', yesterday_list)
+    print('-----------------------------------------------------------------------------------')
+    return yesterday_list
+
+
+def yesterday_check(day_list, board_date):
+    """ 글의 등록일을 이전일과 비교합니다 """
+    if board_date is None:
+        return False
+    result = False
+    for yesterday in day_list:
+        if yesterday == board_date:
+            result = True
+    return result
+
+
+def csv_read_url(src):
+    """ csv파일을 읽습니다 """
+    csv_reader = csv.DictReader(open(src, encoding='UTF8'))
+    url_field_names = csv_reader.fieldnames
+    url_dict_list = []
+
+    for row in csv_reader.reader:
+        url_dict = {}
+        if 'X' == row[7]:  # Crawler
+            continue
+        for ii, h in enumerate(url_field_names):
+            url_dict[h] = row[ii].strip()
+        url_dict_list.append(url_dict)
+    return url_dict_list
+
