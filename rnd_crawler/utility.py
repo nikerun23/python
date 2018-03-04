@@ -90,7 +90,8 @@ def csv_read_url(src):
 def selenium_read_board(csv_info):
     driver = webdriver.Chrome('./chromedriver')
     driver.get(csv_info.url)
-    driver.find_element_by_css_selector(csv_info.click_css).click()
+    for click in csv_info.click_css:
+        driver.find_element_by_css_selector(click).click()
 
     html = driver.page_source
     driver.quit()
