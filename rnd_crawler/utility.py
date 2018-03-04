@@ -1,6 +1,6 @@
 import datetime
 import csv
-
+from selenium import  webdriver
 
 def valid_date(date_str):
     """날짜 양식을 검증합니다"""
@@ -86,4 +86,13 @@ def csv_read_url(src):
                 url_dict[h] = row[ii].strip()
             url_dict_list.append(url_dict)
     return url_dict_list
+
+def selenium_read_board(csv_info):
+    driver = webdriver.Chrome('./chromedriver')
+    driver.get(csv_info.url)
+    driver.find_element_by_css_selector(csv_info.click_css).click()
+
+    html = driver.page_source
+    driver.quit()
+    return html
 
