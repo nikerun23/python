@@ -1,6 +1,8 @@
 import unittest
 import datetime
 from ..utility import valid_date
+from ..utility import modify_date
+
 
 class UtillityTestCase(unittest.TestCase):
 
@@ -29,3 +31,13 @@ class UtillityTestCase(unittest.TestCase):
         ]
         for dt in dateTemp:
             self.assertEqual(datetime.date, valid_date(dt).__class__)
+
+    def test_modify_date(self):
+        date_fm = 'DD/nYY.MM'
+        date_str = '''작성일 : 
+        26
+        18.02
+        '''
+        self.assertEqual('2018-02-26',modify_date(date_fm, date_str))
+
+
