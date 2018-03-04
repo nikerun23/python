@@ -1,6 +1,6 @@
 import datetime
 import csv
-from selenium import  webdriver
+from selenium import webdriver
 
 def valid_date(date_str):
     """날짜 양식을 검증합니다"""
@@ -87,8 +87,11 @@ def csv_read_url(src):
             url_dict_list.append(url_dict)
     return url_dict_list
 
+
 def selenium_read_board(csv_info):
+    """" Selenium을 이용하여 (str)Html 반환 """
     driver = webdriver.Chrome('./chromedriver')
+
     driver.get(csv_info.url)
     for click in csv_info.click_css:
         driver.find_element_by_css_selector(click).click()
@@ -96,4 +99,18 @@ def selenium_read_board(csv_info):
     html = driver.page_source
     driver.quit()
     return html
+
+
+def modify_date(date_fm, date_str):
+    # 과학기술정보통신부
+    if ('DD/nYY.MM' == date_fm):
+        date_str = date_str.split('\n')
+        print('date_str split : ',date_str)
+        dd = date_str[1].strip()
+        mm = date_str[2].strip()[3:]
+        yy = date_str[2].strip()[:2]
+        yyyy = datetime.date.today().strftime('%Y')[:2] + yy
+        date_str = yyyy + '-' + mm + '-' + dd
+        print('result :', date_str)
+    return date_str
 
