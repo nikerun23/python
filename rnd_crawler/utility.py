@@ -2,6 +2,7 @@ import datetime
 import csv
 from selenium import webdriver
 
+
 def valid_date(date_str):
     """날짜 양식을 검증합니다"""
     print('inString:', date_str)
@@ -102,15 +103,29 @@ def selenium_read_board(csv_info):
 
 
 def modify_date(date_fm, date_str):
-    # 과학기술정보통신부
-    if ('DD/nYY.MM' == date_fm):
-        date_str = date_str.split('\n')
-        print('date_str split : ',date_str)
-        dd = date_str[1].strip()
-        mm = date_str[2].strip()[3:]
-        yy = date_str[2].strip()[:2]
-        yyyy = datetime.date.today().strftime('%Y')[:2] + yy
-        date_str = yyyy + '-' + mm + '-' + dd
-        print('result :', date_str)
-    return date_str
+    """" 불규칙한 날짜를 보완하여 (str)Date 반환 """
+    yyyy = mm = dd = result = ''
+    try:
+        # 과학기술정보통신부
+        if ('DD/nYY.MM' == date_fm):
+            date_str = date_str.split('\n') # ['작성일 : ', '        26', '        18.02', '        ']
+            print('date_str split : ',date_str)
+            dd = date_str[1].strip()
+            mm = date_str[2].strip()[3:]
+            yy = date_str[2].strip()[:2]
+            yyyy = datetime.date.today().strftime('%Y')[:2] + yy
+            result = yyyy + '-' + mm + '-' + dd
+        # 국가수리과학연구소
+        elif ('|YYYY-MM-DD' == date_fm):
+            date_str = date_str.split(' ') # 경영관리팀 | 2018-02-20
+            print('date_str split : ',date_str)
+            result = date_str[2]
+        else:
+            result = ''
+
+    except Exception:
+        print('########## 날짜 수정에 실패 하였습니다 :', result)
+        result = ''
+    print('result :', result)
+    return result
 
