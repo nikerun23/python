@@ -16,7 +16,7 @@ def valid_date(date_str):
     if date_str[-1] == '-':
         date_str = date_str[:-1]
     # '~'있을시에 앞 날짜만 추출
-    if date_str.find('~') != -1:
+    if date_str.find('~') > -1:
         date_str = date_str[:date_str.find('~')]
         date_str = date_str.replace('\n', '').replace('\t', '').strip()
     # datetime 객체로 변환
@@ -103,21 +103,24 @@ def selenium_read_board(csv_info):
 
 
 def modify_date(date_fm, date_str):
-    """" 불규칙한 날짜를 보완하여 (str)Date 반환 """
+    """" 부처별 불규칙한 날짜를 보완하여 (str)Date 반환 """
     yyyy = mm = dd = result = ''
     try:
         # 과학기술정보통신부
         if ('DD/nYY.MM' == date_fm):
+            index = 0
+            if (date_str.find('작성일') > -1): # 작성일 엾을경우 대비
+                index = 1
             date_str = date_str.split('\n') # ['작성일 : ', '        26', '        18.02', '        ']
             print('date_str split : ',date_str)
-            dd = date_str[1].strip()
-            mm = date_str[2].strip()[3:]
-            yy = date_str[2].strip()[:2]
+            dd = date_str[index].strip()
+            mm = date_str[index+1].strip()[3:]
+            yy = date_str[index+1].strip()[:2]
             yyyy = datetime.date.today().strftime('%Y')[:2] + yy
             result = yyyy + '-' + mm + '-' + dd
         # 국가수리과학연구소
         elif ('|YYYY-MM-DD' == date_fm):
-            date_str = date_str.split(' ') # 경영관리팀 | 2018-02-20
+            date_str = date_str.split(' ') # ['경영관리팀', '|', '2018-02-26']
             print('date_str split : ',date_str)
             result = date_str[2]
         else:
