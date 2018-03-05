@@ -1,13 +1,13 @@
 import datetime
 import csv
 from selenium import webdriver
-
+import time
 
 def valid_date(date_str, date_fm):
     """ 날짜를 검증합니다 """
     if date_str in ('', None):
         return None
-    if date_fm in ('DD/nYY.MM', '|YYYY-MM-DD'): # 불규칙한 날짜를 보완 (과학기술정보통신부, 국가수리과학연구소)
+    if date_fm in ('DD/nYY.MM', '|YYYY-MM-DD'):  # 불규칙한 날짜를 보완 (과학기술정보통신부, 국가수리과학연구소)
         date_str = modify_date(date_str, date_fm)
     else:
         date_str = date_str.strip()
@@ -24,10 +24,11 @@ def valid_date(date_str, date_fm):
         date_time_str = datetime.datetime.strptime(date_str, '%Y-%m-%d')
     except Exception:
         print('########## 날짜 양식에 문제가 있습니다 :\n', date_str)
-        return None
+        result = None
     else:
         result = datetime.date(date_time_str.year, date_time_str.month, date_time_str.day)
-    return result
+    finally:
+        return result
 
 
 def valid_title(title_str):
@@ -83,23 +84,27 @@ def csv_read_url(src):
             for ii, h in enumerate(url_field_names):
                 url_dict[h] = row[ii].strip()
             url_dict_list.append(url_dict)
-    return url_dict_list
+    finally:
+        return url_dict_list
 
 
 def selenium_read_board(csv_info):
     """" Selenium을 이용하여 (str)Html 반환 """
     try:
         driver = webdriver.Chrome('./chromedriver')
+        driver.maximize_window()
         driver.get(csv_info['URL'])
 
         click_css_list = csv_info['ClickCSS'].split(',')
         for css in click_css_list:
+            time.sleep(1)
             driver.find_element_by_css_selector(css).click()
 
+        time.sleep(0.5)
         html = driver.page_source
     except Exception:
         print('########## Selenium 작동이 중지 되었습니다')
-        return ''
+        html = ''
     finally:
         driver.quit()
         return html
@@ -107,14 +112,14 @@ def selenium_read_board(csv_info):
 
 def modify_date(date_str, date_fm):
     """" 부처별 불규칙한 날짜를 보완하여 (str)Date 반환 """
-    yyyy = mm = dd = result = ''
+    result = ''
     try:
         # 과학기술정보통신부
         if ('DD/nYY.MM' == date_fm):
             index = 0
-            if (date_str.find('작성일') > -1): # 작성일 엾을경우 대비
+            if (date_str.find('작성일') > -1):  # 작성일 엾을경우 대비
                 index = 1
-            date_str = date_str.split('\n') # ['작성일 : ', '        26', '        18.02', '        ']
+            date_str = date_str.split('\n')  # ['작성일 : ', '        26', '        18.02', '        ']
             print('date_str split : ',date_str)
             dd = date_str[index].strip()
             mm = date_str[index+1].strip()[3:]
@@ -124,7 +129,7 @@ def modify_date(date_str, date_fm):
         # 국가수리과학연구소
         elif ('|YYYY-MM-DD' == date_fm):
             date_str = date_str.replace('\n', '').replace('\t', '').strip()
-            date_str = date_str.split(' ') # ['경영관리팀', '|', '2018-02-26']
+            date_str = date_str.split(' ')  # ['경영관리팀', '|', '2018-02-26']
             # print('date_str split : ',date_str)
             result = date_str[-1]
         else:
@@ -134,5 +139,6 @@ def modify_date(date_str, date_fm):
         print('########## 날짜 수정에 실패 하였습니다 :', result)
         result = ''
     # print('result :', result)
-    return result
+    finally:
+        return result
 
