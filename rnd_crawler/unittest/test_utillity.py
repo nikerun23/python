@@ -39,6 +39,14 @@ class UtillityTestCase(unittest.TestCase):
                 18.02
                 '''
         self.assertEqual('2018-02-26', modify_date(date_fm, date_str))
+        date_str = '''작성일 : 
+                        26
+                        18.02'''
+        self.assertEqual('2018-02-26', modify_date(date_fm, date_str))
+        date_str = '''26
+                        18.02'''
+        self.assertEqual('2018-02-26', modify_date(date_fm, date_str))
+
         date_fm = '|YYYY-MM-DD'
         date_str = '경영관리팀 | 2018-02-26'
         self.assertEqual('2018-02-26', modify_date(date_fm, date_str))
