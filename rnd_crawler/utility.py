@@ -3,33 +3,30 @@ import csv
 from selenium import webdriver
 
 
-def valid_date(date_str):
-    """날짜 양식을 검증합니다"""
-    print('inString:', date_str)
+def valid_date(date_str, date_fm):
+    """ 날짜를 검증합니다 """
     if date_str in ('', None):
-        print('return CALL')
         return None
-    date_str = date_str.strip()
-    date_str = date_str.replace(' ', '').replace(',', '-').replace('.', '-').replace('/', '-')
-    print('replace:', date_str)
-    # 마지막 '-' 삭제
-    if date_str[-1] == '-':
-        date_str = date_str[:-1]
-    # '~'있을시에 앞 날짜만 추출
-    if date_str.find('~') > -1:
-        date_str = date_str[:date_str.find('~')]
-        date_str = date_str.replace('\n', '').replace('\t', '').strip()
+    if date_fm in ('DD/nYY.MM', '|YYYY-MM-DD'): # 불규칙한 날짜를 보완 (과학기술정보통신부, 국가수리과학연구소)
+        date_str = modify_date(date_str, date_fm)
+    else:
+        date_str = date_str.strip()
+        date_str = date_str.replace(' ', '').replace(',', '-').replace('.', '-').replace('/', '-')
+        # 마지막 '-' 삭제
+        if date_str[-1] == '-':
+            date_str = date_str[:-1]
+        # '~'있을시에 앞 날짜만 추출
+        if date_str.find('~') > -1:
+            date_str = date_str[:date_str.find('~')]
+            date_str = date_str.replace('\n', '').replace('\t', '').strip()
     # datetime 객체로 변환
     try:
         date_time_str = datetime.datetime.strptime(date_str, '%Y-%m-%d')
     except Exception:
-        print('########## 날짜 양식에 문제가 있습니다 :', date_str)
+        print('########## 날짜 양식에 문제가 있습니다 :\n', date_str)
         return None
     else:
         result = datetime.date(date_time_str.year, date_time_str.month, date_time_str.day)
-    print('outDate:', result)
-    print('---------------------')
-    print(type(result))
     return result
 
 
@@ -91,18 +88,24 @@ def csv_read_url(src):
 
 def selenium_read_board(csv_info):
     """" Selenium을 이용하여 (str)Html 반환 """
-    driver = webdriver.Chrome('./chromedriver')
+    try:
+        driver = webdriver.Chrome('./chromedriver')
+        driver.get(csv_info['URL'])
 
-    driver.get(csv_info.url)
-    for click in csv_info.click_css:
-        driver.find_element_by_css_selector(click).click()
+        click_css_list = csv_info['ClickCSS'].split(',')
+        for css in click_css_list:
+            driver.find_element_by_css_selector(css).click()
 
-    html = driver.page_source
-    driver.quit()
-    return html
+        html = driver.page_source
+    except Exception:
+        print('########## Selenium 작동이 중지 되었습니다')
+        return ''
+    finally:
+        driver.quit()
+        return html
 
 
-def modify_date(date_fm, date_str):
+def modify_date(date_str, date_fm):
     """" 부처별 불규칙한 날짜를 보완하여 (str)Date 반환 """
     yyyy = mm = dd = result = ''
     try:
@@ -120,15 +123,16 @@ def modify_date(date_fm, date_str):
             result = yyyy + '-' + mm + '-' + dd
         # 국가수리과학연구소
         elif ('|YYYY-MM-DD' == date_fm):
+            date_str = date_str.replace('\n', '').replace('\t', '').strip()
             date_str = date_str.split(' ') # ['경영관리팀', '|', '2018-02-26']
-            print('date_str split : ',date_str)
-            result = date_str[2]
+            # print('date_str split : ',date_str)
+            result = date_str[-1]
         else:
             result = ''
 
     except Exception:
         print('########## 날짜 수정에 실패 하였습니다 :', result)
         result = ''
-    print('result :', result)
+    # print('result :', result)
     return result
 
