@@ -1,6 +1,5 @@
 import requests
 from bs4 import BeautifulSoup as bs
-import datetime
 import rnd_crawler.utility as util
 
 
@@ -15,25 +14,28 @@ def print_RnD(csv_info, yesterday_list):
     etc_2_str = csv_info['etc_2']
     date_format = csv_info['DateFormat']
 
-    # etc_2 열
-    if 'verify=False' == etc_2_str:
-        req = requests.get(url, verify=False)
-    else:
-        req = requests.get(url)
-    # etc_1 열
-    if 'utf-8' == etc_1_str:
-        req.encoding = 'utf-8'
-    elif 'euc-kr' == etc_1_str:
-        req.encoding = 'euc-kr'
-    elif 'Ajax' == etc_1_str:
+    if 'Ajax' == etc_1_str:  # Selenium
         html = util.selenium_read_board(csv_info)
-    elif 'Ajax' != etc_1_str:
+    else:
+        # etc_2 열
+        if 'verify=False' == etc_2_str:
+            req = requests.get(url, verify=False)
+        else:
+            req = requests.get(url)
+        # etc_1 열
+        if 'utf-8' == etc_1_str:
+            req.encoding = 'utf-8'
+        elif 'euc-kr' == etc_1_str:
+            req.encoding = 'euc-kr'
         html = req.text
 
     # print(html)
+    if '' == html:
+        return
+
     soup = bs(html, 'lxml')
     board_list = soup.select(select_tr)
-    if 'tr th' == etc_1_str: # th가 tr에 포함되어있을때
+    if 'tr th' == etc_2_str:  # th가 tr에 포함되어있을때 tr 제거
         board_list = board_list[1:]
     # print(boardList)
     for tr in board_list:
@@ -54,19 +56,22 @@ url_dict_list = util.csv_read_url('csv/url_list.csv')
 yesterday_list = util.get_yesterday_list()
 # yesterday_list = [datetime.date(2018, 2, 27)]
 # yesterday_list = [datetime.date(2018, 3, 2), datetime.date(2018, 3, 3), datetime.date(2018, 3, 4)]
+
+
 def print_list():
     for index, info in enumerate(url_dict_list):
         print('csv Row Num :',index + 2)
         print_RnD(info, yesterday_list)
 
+
 def print_test(row_num):
-    row_num = row_num - 2 # index 값 보정
+    row_num = row_num - 2  # index 값 보정
     print(url_dict_list[row_num])
     print_RnD(url_dict_list[row_num], yesterday_list)
 
 
 # print_list()
-print_test(4)
+print_test(50)
 
 # +++++++++++ Main end +++++++++++++++++++++++++++++++++
 
