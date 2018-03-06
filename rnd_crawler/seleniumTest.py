@@ -1,20 +1,29 @@
 from selenium import webdriver
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+import time
 
-driver = webdriver.Chrome('./chromedriver')
 
-url = 'http://www.nipa.kr/board/boardList.it?boardNo=102&menuNo=31&page=1'
-click_css = {'#container > div.leftWrap > div.snb > ul > li:nth-of-type(2) > a',
-             '#container > div.leftWrap > div.snb > ul > li:nth-of-type(4) > a'}
-select_tr = '#q_content table > tbody > tr'
-select_title = 'td.title a'
-select_date = 'td.date'
+options = webdriver.ChromeOptions()
+options.add_argument("--disable-extensions")
+options.add_argument("--start-maximized")
+driver = webdriver.Chrome('./chromedriver', chrome_options=options)
 
-driver.get(url)
+url = 'http://www.kitia.or.kr/contents/information/notice_list.asp'
+click_css = {'#submenu > div.sub_list > ul > li:nth-child(1) > a'}
+select_tr = '#DIV_LIST > table > tbody > tr'
+select_title = 'td:nth-of-type(3) a'
+select_date = 'td:nth-of-type(5)'
+
 try:
-    for click in click_css:
-        driver.find_element_by_css_selector(click).click()
-
+    driver.get(url)
+    time.sleep(5)
+    for css in click_css:
+        driver.find_element_by_css_selector(css).click()
+        time.sleep(5)
     board_list = driver.find_elements_by_css_selector(select_tr)
+    board_list = board_list[1:]
     for tr in board_list:
         title = tr.find_element_by_css_selector(select_title)
         print(title.text)
@@ -24,4 +33,6 @@ except Exception:
     print('########## Selenium 작동이 중지 되었습니다')
 finally:
     driver.quit()
+
+# WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, css)))
 
