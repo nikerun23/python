@@ -7,8 +7,8 @@ from ..utility import modify_date
 class UtillityTestCase(unittest.TestCase):
 
     def test_data(self):
-        self.assertIsNone(valid_date(''))
-        self.assertIsNone(valid_date(None))
+        self.assertIsNone(valid_date('', None))
+        self.assertIsNone(valid_date(None, None))
         dateTemp = [
             '2017-01-01',
             '2017/01/01',
@@ -30,7 +30,7 @@ class UtillityTestCase(unittest.TestCase):
                2018-12-31'''
         ]
         for dt in dateTemp:
-            self.assertEqual(datetime.date, valid_date(dt).__class__)
+            self.assertEqual(datetime.date, valid_date(dt, None).__class__)
 
     def test_modify_date(self):
         date_fm = 'DD/nYY.MM'
@@ -38,18 +38,22 @@ class UtillityTestCase(unittest.TestCase):
                 26
                 18.02
                 '''
-        self.assertEqual('2018-02-26', modify_date(date_fm, date_str))
+        self.assertEqual('2018-02-26', modify_date(date_str, date_fm))
         date_str = '''작성일 : 
                         26
                         18.02'''
-        self.assertEqual('2018-02-26', modify_date(date_fm, date_str))
+        self.assertEqual('2018-02-26', modify_date(date_str, date_fm))
         date_str = '''26
                         18.02'''
-        self.assertEqual('2018-02-26', modify_date(date_fm, date_str))
+        self.assertEqual('2018-02-26', modify_date(date_str, date_fm))
 
         date_fm = '|YYYY-MM-DD'
-        date_str = '경영관리팀 | 2018-02-26'
-        self.assertEqual('2018-02-26', modify_date(date_fm, date_str))
+        date_str = '''							경영관리팀 
+							
+								| 
+							
+							2018-02-26'''
+        self.assertEqual('2018-02-26', modify_date(date_str, date_fm))
 
 
 
