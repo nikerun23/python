@@ -91,16 +91,18 @@ def csv_read_url(src):
 def selenium_read_board(csv_info):
     """" Selenium을 이용하여 (str)Html 반환 """
     try:
-        driver = webdriver.Chrome('./chromedriver')
-        driver.maximize_window()
+        options = webdriver.ChromeOptions()
+        options.add_argument("--disable-extensions")
+        options.add_argument("--start-maximized")
+        driver = webdriver.Chrome('./chromedriver', chrome_options=options)
+
         driver.get(csv_info['URL'])
+        time.sleep(5)
 
         click_css_list = csv_info['ClickCSS'].split(',')
         for css in click_css_list:
-            time.sleep(1)
             driver.find_element_by_css_selector(css).click()
-
-        time.sleep(0.5)
+            time.sleep(5)
         html = driver.page_source
     except Exception:
         print('########## Selenium 작동이 중지 되었습니다')
