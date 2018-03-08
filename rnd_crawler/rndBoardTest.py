@@ -1,8 +1,10 @@
 import requests
 from bs4 import BeautifulSoup as bs
 
-req = requests.get('http://www.kfi.or.kr/home/brd/brd230/brd230_Type4_Lis.do?board_seq=14')
+url = 'https://www.kista.re.kr/usr/'
+req = requests.get(url, verify=False)
 # req.encoding = 'utf-8'
+# req.encoding = 'euc-kr'
 html = req.text
 
 print(html)

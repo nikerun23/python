@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup as bs
 
-url = 'https://www.kista.re.kr/usr/com/prm/BBSList.do?bbsId=BBSMSTR_000000000203&menuNo=10000'
+url = 'https://www.nfri.re.kr/kor/post/business_notice'
 select_tr = 'div.board_list tbody > tr'
 select_title = 'td a.ntsviewBtn'
 select_date = 'td:nth-of-type(5)'
@@ -12,7 +12,7 @@ headers = {
     'Upgrade-Insecure-Requests': '1',
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36',
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-    'Referer': 'https://www.kista.re.kr',
+    'Referer': 'https://www.nfri.re.kr/',
     'Connection': 'keep-alive',
 }
 
