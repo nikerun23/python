@@ -45,8 +45,8 @@ def print_RnD(csv_info, yesterday_list):
         date_list = tr.select_one(select_date)
         board_date = util.valid_date(date_list.text, date_format) # datetime객체로 반환
         # 전일 공고만 출력
-        # if util.yesterday_check(yesterday_list, board_date):
-        print(board_no, title, board_date)
+        if util.yesterday_check(yesterday_list, board_date):
+            print(board_no, title, board_date)
     print('-----------------------------------------------------------------------')
 
 
@@ -70,8 +70,8 @@ def print_test(row_num):
     print_RnD(url_dict_list[row_num], yesterday_list)
 
 
-# print_list()
-print_test(50)
+print_list()
+# print_test(50)
 
 # +++++++++++ Main end +++++++++++++++++++++++++++++++++
 
