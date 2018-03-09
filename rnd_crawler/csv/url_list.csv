@@ -89,8 +89,6 @@
 행정안전부,한국방송통신전파진흥원,입찰공고,http://www.kca.kr/open_content/ko/notice/bid/notice_tender.jsp,X,,,,div.board_list table > tbody > tr,td.subject a,td:nth-of-type(5),YYYY.MM.DD,,
 원자력안전위원회,원자력안전위원회,공지사항,http://www.nssc.go.kr/nssc/notice/news.jsp,X,tr th,tr에 th도 포함되어 타이틀 탐색 불가 (find),,table.lmode tr,td.title a,td:nth-of-type(5),YYYY-MM-DD,,
 방위사업청,방위사업청,공지사항,http://www.dapa.go.kr/user/boardList.action?boardId=I_614&siteId=dapa_kr&id=dapa_kr_040100000000,X,,,,div.boardlist_type1 table > tbody > tr,td.sbj a,td:nth-of-type(5),YYYY-MM-DD,,
-방위사업청,국방기술품질원,공지사항,http://www.dtaq.re.kr/ko/notice/notice.jsp,X,,,,table.tbl_type02 > tbody > tr,td.tit a,td:nth-of-type(3),YYYY-MM-DD,,
-방위사업청,국방기술품질원,입찰공고,http://www.dtaq.re.kr/ko/notice/bidding.jsp,X,,,,table.tbl_type02 > tbody > tr,td.tit a,td:nth-of-type(3),YYYY-MM-DD,,
 방위사업청,국립문화재연구소,공지사항,http://www.nrich.go.kr/kor/boardList.do?menuIdx=282&bbscd=32,X,,,,table.table-list > tbody > tr,td:nth-of-type(2) a,td:nth-of-type(4),YYYY.MM.DD,,
 농촌진흥청,농촌진흥청,공지사항,http://www.rda.go.kr/board/board.do?mode=list&prgId=nei_ancmttEntry,X,,,,div.contents_in table.b_list > tbody > tr,td.board_tb_tit a,td.board_tb_date,YYYY-MM-DD,,
 농촌진흥청,농촌진흥사업 종합관리시스템,과제공모,http://atis.rda.go.kr/rdais/portalSubjectCollect/subjectCollectList.vw?mparmTopMenu=2&mparmLeftMenu=1&findPrgsStatCd=01,X,,,,table.boardlist > tbody > tr,td.txt_left a,td:nth-of-type(4),YYYY.MM.DD,,
