@@ -3,6 +3,7 @@ import csv
 from selenium import webdriver
 import time
 
+
 def valid_date(date_str, date_fm):
     """ 날짜를 검증합니다 """
     if date_str in ('', None):
