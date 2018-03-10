@@ -1,10 +1,10 @@
 import requests
 from bs4 import BeautifulSoup as bs
 
-url = 'http://www.mohw.go.kr/react/al/sal0201ls.jsp?PAR_MENU_ID=04&MENU_ID=0402'
-select_tr = 'div.board_list table > tbody > tr'
-select_title = 'td.ta_l a'
-select_date = 'td:nth-of-type(3)'
+url = 'http://www.msip.go.kr/web/msipContents/contents.do?mId=MTE3'
+select_tr = 'div.board-list table > tbody > tr'
+select_title = 'td.title span'
+select_date = 'td span.date'
 
 req = requests.get(url)
 # req.encoding = 'utf-8'
@@ -15,7 +15,7 @@ soup = bs(html, 'lxml')
 board_list = soup.select(
     select_tr
 )
-# print(boardList)
+print(board_list)
 for i in board_list:
 
     title_list = i.select_one(select_title)

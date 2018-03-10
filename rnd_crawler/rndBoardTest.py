@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup as bs
 
-req = requests.get('http://www.kfi.or.kr/home/brd/brd230/brd230_Type4_Lis.do?board_seq=14')
+req = requests.get('http://www.msip.go.kr/web/msipContents/contents.do?mId=MTE3')
 # req.encoding = 'utf-8'
 html = req.text
 
