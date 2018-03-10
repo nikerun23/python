@@ -1,8 +1,10 @@
 import requests
 from bs4 import BeautifulSoup as bs
 
-req = requests.get('http://www.msip.go.kr/web/msipContents/contents.do?mId=MTE3')
+url = 'https://www.kista.re.kr/usr/'
+req = requests.get(url, verify=False)
 # req.encoding = 'utf-8'
+# req.encoding = 'euc-kr'
 html = req.text
 
 print(html)
