@@ -39,14 +39,19 @@ def print_RnD(csv_info, yesterday_list):
     if 'tr th' == etc_2_str:  # th가 tr에 포함되어있을때 tr 제거
         board_list = board_list[1:]
     for tr in board_list:
-        title_list = tr.select_one(select_title)
-        title = util.valid_title(title_list.text)
-        board_no = ''
-        date_list = tr.select_one(select_date)
-        board_date = util.valid_date(date_list.text, date_format)  # datetime객체로 반환
-        # 전일 공고만 출력
-        # if util.yesterday_check(yesterday_list, board_date):
-        print(board_no, title, board_date)
+        try:
+            title_list = tr.select_one(select_title)
+            title = util.valid_title(title_list.text)
+            board_no = ''
+            date_list = tr.select_one(select_date)
+            board_date = util.valid_date(date_list.text, date_format)  # datetime객체로 반환
+            # 전일 공고만 출력
+            # if util.yesterday_check(yesterday_list, board_date):
+            print(board_no, title, board_date)
+        except AttributeError as e:
+            print(e)
+            print('########## AttributeError PASS !!')
+            pass
     print('-----------------------------------------------------------------------')
 
 
@@ -72,8 +77,8 @@ def print_test(row_num):
     print_RnD(url_dict_list[row_num], yesterday_list)
 
 
-print_list()
-# print_test(50)
+# print_list()
+print_test(50)
 
 # +++++++++++ Main end +++++++++++++++++++++++++++++++++
 
