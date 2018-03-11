@@ -31,13 +31,14 @@ def print_RnD(csv_info, yesterday_list):
 
     # print(html)
     if '' == html:
+        print('########## HTML에 정보가 없습니다 !!')
         return
 
     soup = bs(html, 'lxml')
     board_list = soup.select(select_tr)
     # print(board_list)
-    if 'tr th' == etc_2_str:  # th가 tr에 포함되어있을때 tr 제거
-        board_list = board_list[1:]
+    # if 'tr th' == etc_2_str:  # th가 tr에 포함되어있을때 tr 제거
+        # board_list = board_list[1:]
     for tr in board_list:
         try:
             title_list = tr.select_one(select_title)
