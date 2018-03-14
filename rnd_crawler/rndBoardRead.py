@@ -47,8 +47,8 @@ def print_RnD(csv_info, yesterday_list):
             date_list = tr.select_one(select_date)
             board_date = util.valid_date(date_list.text, date_format)  # datetime객체로 반환
             # 전일 공고만 출력
-            # if util.yesterday_check(yesterday_list, board_date):
-            print(board_no, title, board_date)
+            if util.yesterday_check(yesterday_list, board_date):
+                print(board_no, title, board_date)
         except AttributeError as e:
             print(e)
             print('########## AttributeError PASS !!')
@@ -61,13 +61,13 @@ def print_RnD(csv_info, yesterday_list):
 url_dict_list = util.csv_read_url('csv/url_list.csv')
 yesterday_list = util.get_yesterday_list()
 # yesterday_list = [datetime.date(2018, 2, 27)]
-# yesterday_list = [datetime.date(2018, 3, 2), datetime.date(2018, 3, 3), datetime.date(2018, 3, 4)]
+# yesterday_list = [datetime.date(2018, 3, 9), datetime.date(2018, 3, 10), datetime.date(2018, 3, 11)]
 
 
 def print_list():
     for index, info in enumerate(url_dict_list):
-        if ((index + 2) == 50):
-            continue
+        # if ((index + 2) == 50):
+        #     continue
         print('csv Row Num :',index + 2)
         print_RnD(info, yesterday_list)
 
