@@ -3,7 +3,7 @@ import csv
 from selenium import webdriver
 import time
 import requests
-
+from bs4 import BeautifulSoup as bs
 
 def valid_date(date_str, date_fm):
     """ 날짜를 검증합니다 """
@@ -152,5 +152,45 @@ def valid_a_href(url, href):
     href = href.replace(' ', '').replace('&amp;', '&')
     result = domain_name + href
     return result
+
+
+def get_board_content(url, csv_info):
+
+    select_list = [
+        csv_info['content_Title'],
+        csv_info['content_WriteDate'],
+        csv_info['content_StartDate'],
+        csv_info['content_EndDate'],
+        csv_info['content_Body'],
+        csv_info['content_Files']
+    ]
+
+    req = requests.get(url)
+    soup = bs(req.text, 'lxml')
+
+    result_list = []
+    try:
+        for index,s in enumerate(select_list):
+            if 'NoDate' != s and '' != s:
+                if 4 == index:
+                    html = soup.select_one(s).contents
+                else:
+                    html = soup.select_one(s).text
+            else:
+                html = 'NoDate'
+            result_list.append(html)
+    except Exception as e:
+        print(e)
+        print('########## get_board_content 예외발생 없습니다 !!')
+
+    print(result_list)
+    content = {'title': valid_title(result_list[0]),
+               'write_date': valid_date(result_list[1], ''),
+               'start_date': result_list[2],
+               'end_date': result_list[3],
+               'body': result_list[4],
+               'files': result_list[5]}
+
+    print(content)
 
 
