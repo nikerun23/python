@@ -13,6 +13,7 @@ def print_RnD(csv_info, yesterday_list):
     etc_1_str = csv_info['etc_1']
     etc_2_str = csv_info['etc_2']
     date_format = csv_info['DateFormat']
+    content_url = csv_info['a_href']
 
     if 'Ajax' == etc_1_str:  # Selenium
         html = util.selenium_read_board(csv_info)
@@ -28,6 +29,7 @@ def print_RnD(csv_info, yesterday_list):
         elif 'euc-kr' == etc_1_str:
             req.encoding = 'euc-kr'
         html = req.text
+        print(util.valid_a_href(url, '/jfile/readDownloadFile.do?fileId=MOF_ARTICLE_19241&amp;fileSeq=1'))
 
     # print(html)
     if '' == html:
@@ -43,15 +45,17 @@ def print_RnD(csv_info, yesterday_list):
         try:
             title_list = tr.select_one(select_title)
             title = util.valid_title(title_list.text)
+            title_href = title_list.get('href')
             board_no = ''
             date_list = tr.select_one(select_date)
             board_date = util.valid_date(date_list.text, date_format)  # datetime객체로 반환
             # 전일 공고만 출력
             if util.yesterday_check(yesterday_list, board_date):
-                print(board_no, title, board_date)
+                print(board_no, title, board_date, '\n',content_url+title_href)
+                util.get_board_content(content_url+title_href, csv_info)
         except AttributeError as e:
             print(e)
-            print('########## AttributeError PASS !!')
+            print('########## Attribute Error PASS !!')
             pass
     print('-----------------------------------------------------------------------')
 
@@ -79,7 +83,7 @@ def print_test(row_num):
 
 
 # print_list()
-print_test(50)
+print_test(89)
 
 # +++++++++++ Main end +++++++++++++++++++++++++++++++++
 
