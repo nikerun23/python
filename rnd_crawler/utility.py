@@ -2,6 +2,7 @@ import datetime
 import csv
 from selenium import webdriver
 import time
+import requests
 
 
 def valid_date(date_str, date_fm):
@@ -144,4 +145,12 @@ def modify_date(date_str, date_fm):
     # print('result :', result)
     finally:
         return result
+
+
+def valid_a_href(url, href):
+    domain_name = url[:url.find('.kr') + 3].replace(' ', '')
+    href = href.replace(' ', '').replace('&amp;', '&')
+    result = domain_name + href
+    return result
+
 
