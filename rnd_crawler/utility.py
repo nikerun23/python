@@ -183,7 +183,7 @@ def get_board_content(url, csv_info):
         print(e)
         print('########## get_board_content 예외발생 없습니다 !!')
 
-    print(result_list)
+    # print(result_list)
     content = {'title': valid_title(result_list[0]),
                'write_date': valid_date(result_list[1], ''),
                'start_date': result_list[2],
@@ -191,6 +191,7 @@ def get_board_content(url, csv_info):
                'body': result_list[4],
                'files': result_list[5]}
 
-    print(content)
+    # print(content)
+
 
 
