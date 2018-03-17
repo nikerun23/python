@@ -71,8 +71,6 @@ yesterday_list = util.get_yesterday_list()
 
 def print_list():
     for index, info in enumerate(url_dict_list):
-        # if ((index + 2) == 50):
-        #     continue
         print('csv Row Num :',index + 2)
         print_RnD(info, yesterday_list)
 
@@ -86,47 +84,5 @@ def print_test(row_num):
 print_list()
 # print_test(89)
 
-# +++++++++++ Main end +++++++++++++++++++++++++++++++++
-
 print('++++++++++++++++++++++ 조회 완료 ++++++++++++++++++++++')
 
-# 중복검사
-# http://www.ntis.go.kr/rndgate/eg/un/ra/confirm.do
-# wcTitle : 'TEST공고명'
-
-# 등록
-# headers = {
-#     'Origin': 'http://www.ntis.go.kr',
-#     'Accept-Encoding': 'gzip, deflate',
-#     'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
-#     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.186 Safari/537.36',
-#     'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-#     'Accept': 'application/json, text/javascript, */*; q=0.01',
-#     'Referer': 'http://www.ntis.go.kr/rndgate/eg/un/ra/createForm.do',
-#     'X-Requested-With': 'XMLHttpRequest',
-#     'Connection': 'keep-alive',
-# }
-#
-# data = [
-#   ('waUid', ''),
-#   ('waBbsUid', ''),
-#   ('confirmYn', 'Y'),
-#   ('roFormCd', '28802'),
-#   ('deptCd', 'P50'),
-#   ('wcCompanyName', 'TEST\uACF5\uACE0\uAE30\uAD00\uBA85'),
-#   ('wcTitle', 'TEST\uACF5\uACE0\uBA85'),
-#   ('wcUrl', 'TESTURL'),
-#   ('wcDt', '2018-03-14'),
-#   ('roStrtDt', '2018-03-15'),
-#   ('roEndDt', '2018-03-17'),
-#   ('roDivCd', ''),
-#   ('roAmt', ''),
-#   ('hour', '00'),
-#   ('min', '00'),
-#   ('roReference', ''),
-#   ('roDbrainCd', ''),
-#   ('wcPContent', '<span style="font-size: 12px;">TEST</span><span style="color: rgb(32, 32, 32); font-family: &quot;Nanum Gothic&quot;, sans-serif; font-size: 13px; letter-spacing: -1px; text-align: right; background-color: rgb(243, 243, 243);">\uACF5\uACE0\uB0B4\uC6A9</span>'),
-#   ('', ''),
-# ]
-#
-# response = requests.post('http://www.ntis.go.kr/rndgate/eg/un/ra/create.do', headers=headers, cookies=cookies, data=data)
