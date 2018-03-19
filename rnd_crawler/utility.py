@@ -155,7 +155,6 @@ def valid_a_href(url, href):
 
 
 def get_board_content(url, csv_info):
-
     select_list = [
         csv_info['content_Title'],
         csv_info['content_WriteDate'],
@@ -172,7 +171,7 @@ def get_board_content(url, csv_info):
     try:
         for index,s in enumerate(select_list):
             if 'NoDate' != s and '' != s:
-                if 4 == index:
+                if 4 == index:  # csv_info['content_Body']
                     html = soup.select_one(s).contents
                 else:
                     html = soup.select_one(s).text
@@ -185,13 +184,17 @@ def get_board_content(url, csv_info):
 
     # print(result_list)
     content = {'title': valid_title(result_list[0]),
-               'write_date': valid_date(result_list[1], ''),
+               'url': url,
+               'dept_cd': csv_info['부처'],
+               'wc_company_name': csv_info['기관'],
+               'write_date': valid_date(result_list[1],'').strftime('%Y-%m-%d'),
                'start_date': result_list[2],
                'end_date': result_list[3],
                'body': result_list[4],
                'files': result_list[5]}
 
     # print(content)
+    return content
 
 
 def get_headless(csv_info):
@@ -227,14 +230,14 @@ def write_board_selenium(content):
     driver.get('http://www.ntis.go.kr/rndgate/eg/un/ra/createForm.do')
     time.sleep(3)
 
-    dept_cd = '해양수산부'  # 부처명
-    wc_company_name = '해양수산부'  # 공고기관명
-    wc_title = '제목입니다'
-    wc_url = 'URL'
-    wc_dt = '2018-03-03'
-    ro_strt_dt = '2018-03-03'
-    ro_end_dt = '2018-03-07'
-    body = '글내용입니다'
+    dept_cd = content['dept_cd']  # 부처명
+    wc_company_name = content['wc_company_name']  # 공고기관명
+    wc_title = content['title']
+    wc_url = content['url']
+    wc_dt = content['write_date']
+    ro_strt_dt = content['start_date']
+    ro_end_dt = content['end_date']
+    body = content['body']
 
     driver.find_element_by_css_selector('#roFormCd > option[value="28802"]').click()  # 공고형태
     el = driver.find_element_by_name('deptCd')
@@ -252,9 +255,4 @@ def write_board_selenium(content):
     driver.execute_script('document.getElementsByName("roEndDt")[0].removeAttribute("readonly")')
     driver.find_element_by_name('roEndDt').send_keys(ro_end_dt)
 
-    # content['title']
-    # content['write_date']
-    # content['start_date']
-    # content['end_date']
-    # content['body']
-    # content['files']
+
