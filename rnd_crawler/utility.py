@@ -193,7 +193,8 @@ def get_board_content(url, csv_info):
 
     # print(content)
 
-def get_headless():
+
+def get_headless(csv_info):
     # 크롬 옵션 추가하기
     options = webdriver.ChromeOptions()
     options.add_argument('--headless')  # 헤드리스모드
@@ -211,3 +212,49 @@ def get_headless():
     print(my_user_agent)
     # 브라우저 및 드라이버 종료
     driver.quit()
+
+
+def write_board_selenium(content):
+    options = webdriver.ChromeOptions()
+    options.add_argument("--start-maximized")
+    driver = webdriver.Chrome('./chromedriver', chrome_options=options)
+
+    driver.get('http://www.ntis.go.kr/ThMain.do')
+    driver.find_element_by_name('userid').send_keys('hoon1234')
+    driver.find_element_by_name('password').send_keys('gate4fkd!!')
+    driver.find_element_by_name('password').submit()
+
+    driver.get('http://www.ntis.go.kr/rndgate/eg/un/ra/createForm.do')
+    time.sleep(3)
+
+    dept_cd = '해양수산부'  # 부처명
+    wc_company_name = '해양수산부'  # 공고기관명
+    wc_title = '제목입니다'
+    wc_url = 'URL'
+    wc_dt = '2018-03-03'
+    ro_strt_dt = '2018-03-03'
+    ro_end_dt = '2018-03-07'
+    body = '글내용입니다'
+
+    driver.find_element_by_css_selector('#roFormCd > option[value="28802"]').click()  # 공고형태
+    el = driver.find_element_by_name('deptCd')
+    for option in el.find_elements_by_tag_name('option'):
+        if dept_cd == option.text:
+            option.click()  # select() in earlier versions of webdriver
+            break
+    driver.find_element_by_name('wcCompanyName').send_keys(wc_company_name)
+    driver.find_element_by_name('wcTitle').send_keys(wc_title)
+    driver.find_element_by_name('wcUrl').send_keys(wc_url)
+    driver.execute_script('document.getElementsByName("wcDt")[0].removeAttribute("readonly")')
+    driver.find_element_by_name('wcDt').send_keys(wc_dt)
+    driver.execute_script('document.getElementsByName("roStrtDt")[0].removeAttribute("readonly")')
+    driver.find_element_by_name('roStrtDt').send_keys(ro_strt_dt)
+    driver.execute_script('document.getElementsByName("roEndDt")[0].removeAttribute("readonly")')
+    driver.find_element_by_name('roEndDt').send_keys(ro_end_dt)
+
+    # content['title']
+    # content['write_date']
+    # content['start_date']
+    # content['end_date']
+    # content['body']
+    # content['files']
