@@ -21,6 +21,8 @@ def valid_date(date_str, date_fm):
         if date_str.find('~') > -1:
             date_str = date_str[:date_str.find('~')]
             date_str = date_str.replace('\n', '').replace('\t', '').strip()
+        if date_str.find(':') > -1:  # HH:MM 포함되어 있을 경우 제거
+            date_str = date_str[:10]
     # datetime 객체로 변환
     try:
         date_time_str = datetime.datetime.strptime(date_str, '%Y-%m-%d')
@@ -163,10 +165,10 @@ def get_board_content(url, csv_info):
         csv_info['content_Body'],
         csv_info['content_Files']
     ]
-
     req = requests.get(url)
     soup = bs(req.text, 'lxml')
 
+    print(req.text)
     result_list = []
     try:
         for index,s in enumerate(select_list):
@@ -180,7 +182,7 @@ def get_board_content(url, csv_info):
             result_list.append(html)
     except Exception as e:
         print(e)
-        print('########## get_board_content 예외발생 없습니다 !!')
+        print('########## get_board_content 예외발생 !!')
 
     # print(result_list)
     content = {'title': valid_title(result_list[0]),
@@ -254,5 +256,9 @@ def write_board_selenium(content):
     driver.find_element_by_name('roStrtDt').send_keys(ro_strt_dt)
     driver.execute_script('document.getElementsByName("roEndDt")[0].removeAttribute("readonly")')
     driver.find_element_by_name('roEndDt').send_keys(ro_end_dt)
-
+    time.sleep(2)
+    driver.execute_script('document.getElementById("#smart_editor2_content")')
+    driver.find_element_by_css_selector('#smart_editor2_content body').send_keys(body)
+    driver.find_element_by_css_selector('#smart_editor2_content body').send_keys(body)
+# document.getElementById('smart_editor2_content')
 
