@@ -53,8 +53,8 @@ def print_RnD(csv_info, yesterday_list):
             if util.yesterday_check(yesterday_list, board_date):
                 print(board_no, title, board_date)
                 # print(board_no, title, board_date, '\n',content_url+title_href)
-                rnd_content = util.get_board_content(content_url+title_href, csv_info)
-                util.write_board_selenium(rnd_content)
+                # rnd_content = util.get_board_content(content_url+title_href, csv_info)
+                # util.write_board_selenium(rnd_content)
         except AttributeError as e:
             print(e)
             print('########## Attribute Error PASS !!')
@@ -70,9 +70,11 @@ yesterday_list = util.get_yesterday_list()
 # yesterday_list = [datetime.date(2018, 3, 9), datetime.date(2018, 3, 10), datetime.date(2018, 3, 11)]
 
 
-def print_list():
+def print_list(ignore):
     for index, info in enumerate(url_dict_list):
         print('csv Row Num :',index + 2)
+        if ignore == (index + 2):
+            continue
         print_RnD(info, yesterday_list)
 
 
@@ -82,8 +84,8 @@ def print_test(row_num):
     print_RnD(url_dict_list[row_num], yesterday_list)
 
 
-# print_list()
-print_test(89)
+print_list(27)
+# print_test(89)
 
 print('++++++++++++++++++++++ 조회 완료 ++++++++++++++++++++++')
 
