@@ -168,13 +168,15 @@ def get_board_content(url, csv_info):
     req = requests.get(url)
     soup = bs(req.text, 'lxml')
 
-    print(req.text)
+    # print(req.text)
     result_list = []
     try:
         for index,s in enumerate(select_list):
             if 'NoDate' != s and '' != s:
                 if 4 == index:  # csv_info['content_Body']
                     html = soup.select_one(s).contents
+                elif index in (1, 2, 3):  # Date
+                    html = valid_date(soup.select_one(s).text, None).strftime('%Y-%m-%d')
                 else:
                     html = soup.select_one(s).text
             else:
