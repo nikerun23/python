@@ -45,7 +45,7 @@ def print_RnD(csv_info, yesterday_list):
         try:
             title_list = tr.select_one(select_title)
             title = util.valid_title(title_list.text)
-            title_href = title_list.get('href')
+            title_href = title_list.get('href').replace('./', '')
             board_no = ''
             date_list = tr.select_one(select_date)
             board_date = util.valid_date(date_list.text, date_format)  # datetime객체로 반환
@@ -53,7 +53,8 @@ def print_RnD(csv_info, yesterday_list):
             if util.yesterday_check(yesterday_list, board_date):
                 print(board_no, title, board_date)
                 # print(board_no, title, board_date, '\n',content_url+title_href)
-                # rnd_content = util.get_board_content(content_url+title_href, csv_info)
+                print(content_url+title_href)
+                rnd_content = util.get_board_content(content_url+title_href, csv_info)
                 # util.write_board_selenium(rnd_content)
         except AttributeError as e:
             print(e)
@@ -84,8 +85,8 @@ def print_test(row_num):
     print_RnD(url_dict_list[row_num], yesterday_list)
 
 
-print_list(27)
-# print_test(89)
+# print_list(27)
+print_test(74)
 
 print('++++++++++++++++++++++ 조회 완료 ++++++++++++++++++++++')
 
