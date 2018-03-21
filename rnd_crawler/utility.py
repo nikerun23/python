@@ -5,6 +5,7 @@ import time
 import requests
 from bs4 import BeautifulSoup as bs
 
+
 def valid_date(date_str, date_fm):
     """ 날짜를 검증합니다 """
     if date_str in ('', None):
@@ -18,10 +19,10 @@ def valid_date(date_str, date_fm):
         if date_str[-1] == '-':
             date_str = date_str[:-1]
         # '~'있을시에 앞 날짜만 추출
-        if date_str.find('~') > -1:
+        if '~' in date_str:
             date_str = date_str[:date_str.find('~')]
             date_str = date_str.replace('\n', '').replace('\t', '').strip()
-        if date_str.find(':') > -1:  # HH:MM 포함되어 있을 경우 제거
+        if ':' in date_str:  # HH:MM 포함되어 있을 경우 제거
             date_str = date_str[:10]
     # datetime 객체로 변환
     try:
@@ -121,9 +122,9 @@ def modify_date(date_str, date_fm):
     result = ''
     try:
         # 과학기술정보통신부
-        if ('DD/nYY.MM' == date_fm):
+        if 'DD/nYY.MM' == date_fm:
             index = 0
-            if (date_str.find('작성일') > -1):  # 작성일 엾을경우 대비
+            if '작성일' in date_str:  # 작성일 엾을경우 대비
                 index = 1
             date_str = date_str.split('\n')  # ['작성일 : ', '        26', '        18.02', '        ']
             print('date_str split : ',date_str)
@@ -133,7 +134,7 @@ def modify_date(date_str, date_fm):
             yyyy = datetime.date.today().strftime('%Y')[:2] + yy
             result = yyyy + '-' + mm + '-' + dd
         # 국가수리과학연구소
-        elif ('|YYYY-MM-DD' == date_fm):
+        elif '|YYYY-MM-DD' == date_fm:
             date_str = date_str.replace('\n', '').replace('\t', '').strip()
             date_str = date_str.split(' ')  # ['경영관리팀', '|', '2018-02-26']
             # print('date_str split : ',date_str)
