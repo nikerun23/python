@@ -264,3 +264,18 @@ def write_board_selenium(content):
     driver.find_element_by_css_selector('#smart_editor2_content body').send_keys(body)
 # document.getElementById('smart_editor2_content')
 
+
+def get_keyword_title(title):
+    result = False
+    keywords = ('연구', '과제', '사업', '조사', '...')
+    ignore_keywords = ('예고문', '예정')
+
+    for k in keywords:
+        if k in title:
+            result = True
+    for ik in ignore_keywords:
+        if ik in title:
+            result = False
+
+    return result
+
