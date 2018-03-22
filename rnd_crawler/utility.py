@@ -270,23 +270,39 @@ def write_board_selenium(content):
 # document.getElementById('smart_editor2_content')
 
 
+"""" 타이틀 키워드를 필터링 합니다 """
+def get_keyword_title(title, keyword_list):
+    result = False
+
+    search_keywords = keyword_list['search_keyword']
+    ignore_keywords = keyword_list['ignore_keyword']
+
+    for k in search_keywords:
+        if k in title:
+            result = True
+    for ik in ignore_keywords:
+        if ik in title:
+            result = False
+    return result
+
+
 """" 타이틀 키워드 필터링 리스트 csv파일을 불러옵니다 """
 def get_search_keyword_csv(src):
     try:
         csv_reader = csv.DictReader(open(src, encoding='UTF-8'))
         field_names = csv_reader.fieldnames
 
-        keyword_title = {}
+        keyword_list = {}
         for fn in field_names:
             result_list = []
-            keyword_title[fn] = result_list
+            keyword_list[fn] = result_list
 
         for row in csv_reader.reader:
             for index, field_name in enumerate(field_names):
                 if '' != row[index]:
-                    keyword_title[field_name].append(row[index])
+                    keyword_list[field_name].append(row[index])
     except FileNotFoundError:
         print('########## 파일을 찾을 수 없습니다 :', 'search_keyword.csv')
-    return keyword_title
+    return keyword_list
 
 
