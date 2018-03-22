@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup as bs
 import rnd_crawler.utility as util
 
 
-def print_RnD(csv_info, yesterday_list):
+def print_RnD(csv_info, yesterday_list, keyword_list):
     print(csv_info['부처'], '---', csv_info['기관'], '---------------------------------------')
     print(csv_info['URL'])
     url = csv_info['URL']
@@ -52,8 +52,8 @@ def print_RnD(csv_info, yesterday_list):
             board_date = util.valid_date(date_list.text, date_format)  # datetime객체로 반환
             # 전일 공고만 출력
             if util.yesterday_check(yesterday_list, board_date):
-                if util.get_keyword_title(title):
-                    print(board_no, title, board_date)
+                if util.get_keyword_title(title, keyword_list):
+                    print(board_no, title, board_date)  # 결과 데이터 라인
                 # print(board_no, title, board_date, '\n',content_url+title_href)
                 # print(content_url+title_href)
                 # rnd_content = util.get_board_content(content_url+title_href, csv_info)
@@ -68,27 +68,28 @@ def print_RnD(csv_info, yesterday_list):
 # +++++++++++ Main start +++++++++++++++++++++++++++++++++
 
 url_dict_list = util.csv_read_url('csv/url_list.csv')
+keyword_list = util.csv_read_keyword('csv/search_keyword.csv')
 yesterday_list = util.get_yesterday_list()
 # yesterday_list = [datetime.date(2018, 2, 27)]
 # yesterday_list = [datetime.date(2018, 3, 9), datetime.date(2018, 3, 10), datetime.date(2018, 3, 11)]
-
+print(keyword_list)
 
 def print_list(ignore):
     for index, info in enumerate(url_dict_list):
         print('csv Row Num :',index + 2)
         if ignore == (index + 2):
             continue
-        print_RnD(info, yesterday_list)
+        print_RnD(info, yesterday_list, keyword_list)
 
 
 def print_test(row_num):
     row_num = row_num - 2  # index 값 보정
     # print(url_dict_list[row_num])
-    print_RnD(url_dict_list[row_num], yesterday_list)
+    print_RnD(url_dict_list[row_num], yesterday_list, keyword_list)
 
 
-print_list(27)
-# print_test(38)
+print_list(999)
+# print_test(27)
 
 print('++++++++++++++++++++++ 조회 완료 ++++++++++++++++++++++')
 
