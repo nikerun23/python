@@ -287,7 +287,7 @@ def get_keyword_title(title, keyword_list):
 
 
 """" 타이틀 키워드 필터링 리스트 csv파일을 불러옵니다 """
-def get_search_keyword_csv(src):
+def csv_read_keyword(src):
     try:
         csv_reader = csv.DictReader(open(src, encoding='UTF-8'))
         field_names = csv_reader.fieldnames
