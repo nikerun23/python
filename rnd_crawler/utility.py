@@ -6,11 +6,11 @@ import requests
 from bs4 import BeautifulSoup as bs
 
 
+""" 날짜를 검증합니다 """
 def valid_date(date_str, date_fm):
-    """ 날짜를 검증합니다 """
     if date_str in ('', None):
         return None
-    if date_fm in ('DD/nYY.MM', '|YYYY-MM-DD'):  # 불규칙한 날짜를 보완 (과학기술정보통신부, 국가수리과학연구소)
+    if date_fm in ('DD/nYY.MM', '|YYYY-MM-DD', '작성일YYYY-MM-DD'):  # 불규칙한 날짜를 보완 (과학기술정보통신부, 국가수리과학연구소)
         date_str = modify_date(date_str, date_fm)
     else:
         date_str = date_str.strip()
@@ -36,17 +36,17 @@ def valid_date(date_str, date_fm):
         return result
 
 
+""" 글제목을 검증합니다 """
 def valid_title(title_str):
-    """ 글제목을 검증합니다 """
     if title_str is None:
         return ''
     title_str = title_str.strip()
-    title_str = title_str.replace('  ', '').replace('\t', '').replace('\n', '')
+    title_str = title_str.replace('  ', '').replace('\t', '').replace('\n', '').replace('새글', '').replace('New', '')
     return title_str
 
 
+""" 전일 날짜를 구합니다 """
 def get_yesterday_list():
-    """ 전일 날짜를 구합니다 """
     yesterday = datetime.date.today() - datetime.timedelta(days=1)
     day_of_week = ['월', '화', '수', '목', '금', '토', '일']
     yesterday_list = [yesterday]
@@ -62,8 +62,8 @@ def get_yesterday_list():
     return yesterday_list
 
 
+""" 글의 등록일을 이전일과 비교합니다 """
 def yesterday_check(day_list, board_date):
-    """ 글의 등록일을 이전일과 비교합니다 """
     if board_date is None:
         return False
     result = False
@@ -73,8 +73,8 @@ def yesterday_check(day_list, board_date):
     return result
 
 
+""" csv파일을 읽습니다 """
 def csv_read_url(src):
-    """ csv파일을 읽습니다 """
     url_dict_list = []
     try:
         csv_reader = csv.DictReader(open(src, encoding='UTF8'))
@@ -93,8 +93,8 @@ def csv_read_url(src):
         return url_dict_list
 
 
+"""" Selenium을 이용하여 (str)Html 반환 """
 def selenium_read_board(csv_info):
-    """" Selenium을 이용하여 (str)Html 반환 """
     try:
         options = webdriver.ChromeOptions()
         options.add_argument("--disable-extensions")
@@ -117,14 +117,14 @@ def selenium_read_board(csv_info):
         return html
 
 
+"""" 부처별 불규칙한 날짜를 보완하여 (str)Date 반환 """
 def modify_date(date_str, date_fm):
-    """" 부처별 불규칙한 날짜를 보완하여 (str)Date 반환 """
     result = ''
     try:
         # 과학기술정보통신부
         if 'DD/nYY.MM' == date_fm:
             index = 0
-            if '작성일' in date_str:  # 작성일 엾을경우 대비
+            if '작성일' in date_str:  # 작성일 없을경우 대비
                 index = 1
             date_str = date_str.split('\n')  # ['작성일 : ', '        26', '        18.02', '        ']
             print('date_str split : ',date_str)
@@ -139,6 +139,9 @@ def modify_date(date_str, date_fm):
             date_str = date_str.split(' ')  # ['경영관리팀', '|', '2018-02-26']
             # print('date_str split : ',date_str)
             result = date_str[-1]
+        # 한국항공우주연구원
+        elif '작성일YYYY-MM-DD' == date_fm:
+            result = date_str.replace(' ', '').replace('\t', '').strip()[3:]
         else:
             result = ''
 
@@ -157,6 +160,7 @@ def valid_a_href(url, href):
     return result
 
 
+"""" 공고 게시판 내용을 가져옵니다 Dict 타입으로 반환 """
 def get_board_content(url, csv_info):
     select_list = [
         csv_info['content_Title'],
@@ -266,17 +270,23 @@ def write_board_selenium(content):
 # document.getElementById('smart_editor2_content')
 
 
-def get_keyword_title(title):
-    result = False
-    keywords = ('연구', '과제', '사업', '조사', '...')
-    ignore_keywords = ('예고문', '예정')
+"""" 타이틀 키워드 필터링 리스트 csv파일을 불러옵니다 """
+def get_search_keyword_csv(src):
+    try:
+        csv_reader = csv.DictReader(open(src, encoding='UTF-8'))
+        field_names = csv_reader.fieldnames
 
-    for k in keywords:
-        if k in title:
-            result = True
-    for ik in ignore_keywords:
-        if ik in title:
-            result = False
+        keyword_title = {}
+        for fn in field_names:
+            result_list = []
+            keyword_title[fn] = result_list
 
-    return result
+        for row in csv_reader.reader:
+            for index, field_name in enumerate(field_names):
+                if '' != row[index]:
+                    keyword_title[field_name].append(row[index])
+    except FileNotFoundError:
+        print('########## 파일을 찾을 수 없습니다 :', 'search_keyword.csv')
+    return keyword_title
+
 
