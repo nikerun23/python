@@ -84,8 +84,6 @@ def csv_read_url(src):
         url_field_names = csv_reader.fieldnames
         for row in csv_reader.reader:
             url_dict = {}
-            if 'X' == row[7]:  # Crawler
-                continue
             for ii, h in enumerate(url_field_names):
                 url_dict[h] = row[ii].strip()
             url_dict_list.append(url_dict)
@@ -125,7 +123,6 @@ def modify_date(date_str, date_fm):
         # 과학기술정보통신부
         if 'DD/nYY.MM' == date_fm:
             date_str = date_str.replace('\n','').replace(' ','')
-            print(date_str)
             dd = date_str[-7:-5].strip()
             mm = date_str[-2:].strip()
             yy = date_str[-5:-3].strip()
