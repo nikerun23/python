@@ -6,6 +6,9 @@ import rnd_crawler.utility as util
 def print_RnD(csv_info, yesterday_list, keyword_list):
     print(csv_info['부처'], '---', csv_info['기관'], '---------------------------------------')
     print(csv_info['URL'])
+    if 'X' == csv_info['Crawler']:  # Crawler
+        print('X --- 크롤링 제외 ------------------------')
+        return None
     url = csv_info['URL']
     select_tr = csv_info['TR']
     select_title = csv_info['Title']
@@ -51,9 +54,9 @@ def print_RnD(csv_info, yesterday_list, keyword_list):
             date_list = tr.select_one(select_date)
             board_date = util.valid_date(date_list.text, date_format)  # datetime객체로 반환
             # 전일 공고만 출력
-            if util.yesterday_check(yesterday_list, board_date):
-                if util.get_keyword_title(title, keyword_list):
-                    print(board_no, title, board_date)  # 결과 데이터 라인
+            # if util.yesterday_check(yesterday_list, board_date):
+            if util.get_keyword_title(title, keyword_list):
+                print(board_no, title, board_date)  # 결과 데이터 라인
                 # print(board_no, title, board_date, '\n',content_url+title_href)
                 # print(content_url+title_href)
                 # rnd_content = util.get_board_content(content_url+title_href, csv_info)
@@ -89,7 +92,7 @@ def print_test(row_num):
 
 
 print_list(999)
-# print_test(27)
+# print_test(3)
 
 print('++++++++++++++++++++++ 조회 완료 ++++++++++++++++++++++')
 
