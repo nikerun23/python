@@ -6,7 +6,7 @@ import requests
 from bs4 import BeautifulSoup as bs
 
 
-""" 날짜를 검증합니다 """
+# """ 날짜를 검증합니다 """
 def valid_date(date_str, date_fm):
     if date_str in ('', None):
         return None
@@ -36,7 +36,7 @@ def valid_date(date_str, date_fm):
         return result
 
 
-""" 글제목을 검증합니다 """
+# """ 글제목을 검증합니다 """
 def valid_title(title_str):
     if title_str is None:
         return ''
@@ -45,7 +45,7 @@ def valid_title(title_str):
     return title_str
 
 
-""" 전일 날짜를 구합니다 """
+# """ 전일 날짜를 구합니다 """
 def get_yesterday_list():
     yesterday = datetime.date.today() - datetime.timedelta(days=1)
     day_of_week = ['월', '화', '수', '목', '금', '토', '일']
@@ -62,7 +62,7 @@ def get_yesterday_list():
     return yesterday_list
 
 
-""" 글의 등록일을 이전일과 비교합니다 """
+# """ 글의 등록일을 이전일과 비교합니다 """
 def yesterday_check(day_list, board_date):
     if board_date is None:
         return False
@@ -73,7 +73,7 @@ def yesterday_check(day_list, board_date):
     return result
 
 
-""" csv파일을 읽습니다 """
+# """ csv파일을 읽습니다 """
 def csv_read_url(src):
     url_dict_list = []
     try:
@@ -93,7 +93,7 @@ def csv_read_url(src):
         return url_dict_list
 
 
-"""" Selenium을 이용하여 (str)Html 반환 """
+# """" Selenium을 이용하여 (str)Html 반환 """
 def selenium_read_board(csv_info):
     try:
         options = webdriver.ChromeOptions()
@@ -103,8 +103,9 @@ def selenium_read_board(csv_info):
 
         driver.get(csv_info['URL'])
         time.sleep(5)
-
-        click_css_list = csv_info['ClickCSS'].split(',')
+        click_css_list = {}
+        if ',' in csv_info['ClickCSS']:
+            click_css_list = csv_info['ClickCSS'].split(',')
         for css in click_css_list:
             driver.find_element_by_css_selector(css).click()
             time.sleep(5)
@@ -117,20 +118,17 @@ def selenium_read_board(csv_info):
         return html
 
 
-"""" 부처별 불규칙한 날짜를 보완하여 (str)Date 반환 """
+# """" 부처별 불규칙한 날짜를 보완하여 (str)Date 반환 """
 def modify_date(date_str, date_fm):
     result = ''
     try:
         # 과학기술정보통신부
         if 'DD/nYY.MM' == date_fm:
-            index = 0
-            if '작성일' in date_str:  # 작성일 없을경우 대비
-                index = 1
-            date_str = date_str.split('\n')  # ['작성일 : ', '        26', '        18.02', '        ']
-            print('date_str split : ',date_str)
-            dd = date_str[index].strip()
-            mm = date_str[index+1].strip()[3:]
-            yy = date_str[index+1].strip()[:2]
+            date_str = date_str.replace('\n','').replace(' ','')
+            print(date_str)
+            dd = date_str[-7:-5].strip()
+            mm = date_str[-2:].strip()
+            yy = date_str[-5:-3].strip()
             yyyy = datetime.date.today().strftime('%Y')[:2] + yy
             result = yyyy + '-' + mm + '-' + dd
         # 국가수리과학연구소
@@ -160,7 +158,7 @@ def valid_a_href(url, href):
     return result
 
 
-"""" 공고 게시판 내용을 가져옵니다 Dict 타입으로 반환 """
+# """" 공고 게시판 내용을 가져옵니다 Dict 타입으로 반환 """
 def get_board_content(url, csv_info):
     select_list = [
         csv_info['content_Title'],
@@ -270,7 +268,7 @@ def write_board_selenium(content):
 # document.getElementById('smart_editor2_content')
 
 
-"""" 타이틀 키워드를 필터링 합니다 """
+# """" 타이틀 키워드를 필터링 합니다 """
 def get_keyword_title(title, keyword_list):
     result = False
 
@@ -286,7 +284,7 @@ def get_keyword_title(title, keyword_list):
     return result
 
 
-"""" 타이틀 키워드 필터링 리스트 csv파일을 불러옵니다 """
+# """" 타이틀 키워드 필터링 리스트 csv파일을 불러옵니다 """
 def csv_read_keyword(src):
     try:
         csv_reader = csv.DictReader(open(src, encoding='UTF-8'))
