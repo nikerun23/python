@@ -4,7 +4,8 @@ from selenium import webdriver
 import time
 import requests
 from bs4 import BeautifulSoup as bs
-
+import telegram
+from multiprocessing import Pool
 
 # """ 날짜를 검증합니다 """
 def valid_date(date_str, date_fm):
@@ -301,3 +302,13 @@ def csv_read_keyword(src):
     return keyword_list
 
 
+def send_teltgram_bot():
+    # pip3 install python-telegram-bot
+    bot = telegram.Bot(token='594957094:AAG2amlQoS-enenuId2brtRhN4aXqLJH0bw')
+    result_text = '안녕하세요 !!'
+    bot.sendMessage(chat_id=568182246, text=result_text)
+
+
+def multiprocessing():
+    pool = Pool(processes=2)
+    # pool = pool.map('함수명', '인자값')
