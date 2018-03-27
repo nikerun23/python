@@ -42,26 +42,29 @@ def print_RnD(csv_info, yesterday_list, keyword_list):
     soup = bs(html, 'lxml')
     board_list = soup.select(select_tr)
     # print(board_list)
-    # if 'tr th' == etc_2_str:  # th가 tr에 포함되어있을때 tr 제거
-        # board_list = board_list[1:]
+
     for tr in board_list:
         try:
             title_list = tr.select_one(select_title)
             title = util.valid_title(title_list.text)
-            if title_list.get('href') is not None:  # 제목 링크에 href가 존재할 경우만
+            if 'href' in title_list.attrs:  # 제목 링크에 href가 존재할 경우만
                 title_href = title_list.get('href').replace('./', '')
+                print('href 가 있습니다 = ',content_url+title_href)
+            if 'onclick' in title_list.attrs:  # 제목 링크에 href가 존재할 경우만
+                print('onclick 가 있습니다 = ',title_list.attrs['onclick'])
             board_no = ''
             date_list = tr.select_one(select_date)
             board_date = util.valid_date(date_list.text, date_format)  # datetime객체로 반환
             # 전일 공고만 출력
-            if util.yesterday_check(yesterday_list, board_date):
-                if util.get_keyword_title(title, keyword_list):
-                    print(board_no, title, board_date)  # 결과 데이터 라인
+            # if util.yesterday_check(yesterday_list, board_date):
+            if util.get_keyword_title(title, keyword_list):
+                print(board_no, title, board_date)  # 결과 데이터 라인
                 # print(board_no, title, board_date, '\n',content_url+title_href)
                 # print(content_url+title_href)
                 # rnd_content = util.get_board_content(content_url+title_href, csv_info)
                 # util.write_board_selenium(rnd_content)
         except AttributeError as e:
+            # TimeoutError, ConnectionRefusedError
             print(e)
             print('########## Attribute Error PASS !!')
             pass
@@ -77,6 +80,7 @@ yesterday_list = util.get_yesterday_list()
 # yesterday_list = [datetime.date(2018, 3, 9), datetime.date(2018, 3, 10), datetime.date(2018, 3, 11)]
 print(keyword_list)
 
+
 def print_list(ignore=999):
     for index, info in enumerate(url_dict_list):
         print('csv Row Num :',index + 2)
@@ -91,8 +95,8 @@ def print_test(row_num):
     print_RnD(url_dict_list[row_num], yesterday_list, keyword_list)
 
 
-print_list()  # 인자로 rowNum을 주면 제외하고 크롤링
-# print_test(50)
+# print_list()  # 인자로 rowNum을 주면 제외하고 크롤링
+print_test(59)
 
 print('++++++++++++++++++++++ 조회 완료 ++++++++++++++++++++++')
 
