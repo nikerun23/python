@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup as bs
 import telegram
 from multiprocessing import Pool
 
+
 # """ 날짜를 검증합니다 """
 def valid_date(date_str, date_fm):
     if date_str in ('', None):
@@ -170,7 +171,9 @@ def get_board_content(url, csv_info):
         csv_info['content_Files']
     ]
     req = requests.get(url)
-    soup = bs(req.text, 'lxml')
+    html = req.text
+
+    soup = bs(html, 'lxml')
 
     # print(req.text)
     result_list = []
@@ -180,7 +183,8 @@ def get_board_content(url, csv_info):
                 if 4 == index:  # csv_info['content_Body']
                     html = soup.select_one(s).contents
                 elif index in (1, 2, 3):  # Date
-                    html = valid_date(soup.select_one(s).text, None).strftime('%Y-%m-%d')
+                    # html = valid_date(soup.select_one(s).text, None).strftime('%Y-%m-%d')
+                    html = ''
                 else:
                     html = soup.select_one(s).text
             else:
@@ -195,13 +199,13 @@ def get_board_content(url, csv_info):
                'url': url,
                'dept_cd': csv_info['부처'],
                'wc_company_name': csv_info['기관'],
-               'write_date': valid_date(result_list[1],'').strftime('%Y-%m-%d'),
+               'write_date': csv_info['content_WriteDate'],
                'start_date': result_list[2],
                'end_date': result_list[3],
                'body': result_list[4],
                'files': result_list[5]}
 
-    # print(content)
+    print(content)
     return content
 
 
@@ -305,7 +309,7 @@ def csv_read_keyword(src):
     return keyword_list
 
 
-def send_teltgram_bot():
+def send_telegram_bot():
     bot = telegram.Bot(token='594957094:AAG2amlQoS-enenuId2brtRhN4aXqLJH0bw')
     result_text = '안녕하세요 !!'
     bot.sendMessage(chat_id=568182246, text=result_text)
@@ -314,3 +318,20 @@ def send_teltgram_bot():
 def multiprocessing():
     pool = Pool(processes=2)
     # pool = pool.map('함수명', '인자값')
+
+
+# """" 공고 게시판 내용을 가져옵니다 Dict 타입으로 반환 """
+def get_board_content_selenium(title, url, select_title):
+    options = webdriver.ChromeOptions()
+    options.add_argument("--start-maximized")
+    driver = webdriver.Chrome('./chromedriver', chrome_options=options)
+    driver.get(url)
+    title_list = driver.find_elements_by_css_selector(select_title)
+    for tr in title_list:
+        # if tr.get_attribute('onclick') == onclick:
+        if title in tr.text:
+            print(tr.text)
+            # title.click()
+            # time.sleep(2)
+
+
