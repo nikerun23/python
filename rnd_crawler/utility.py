@@ -204,7 +204,6 @@ def get_board_content(url, csv_info):
                'end_date': result_list[3],
                'body': result_list[4],
                'files': result_list[5]}
-
     print(content)
     return content
 
@@ -309,12 +308,14 @@ def csv_read_keyword(src):
     return keyword_list
 
 
+# """" 텔레그램 봇 """
 def send_telegram_bot():
     bot = telegram.Bot(token='594957094:AAG2amlQoS-enenuId2brtRhN4aXqLJH0bw')
     result_text = '안녕하세요 !!'
     bot.sendMessage(chat_id=568182246, text=result_text)
 
 
+# """" multiprocessing """
 def multiprocessing():
     pool = Pool(processes=2)
     # pool = pool.map('함수명', '인자값')
