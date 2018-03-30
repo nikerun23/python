@@ -51,10 +51,10 @@ def print_RnD(csv_info, yesterday_list, keyword_list):
             date_list = tr.select_one(select_date)
             board_date = util.valid_date(date_list.text, date_format)  # datetime객체로 반환
             # 전일 공고만 출력
-            # if util.yesterday_check(yesterday_list, board_date):
-            if util.get_keyword_title(title, keyword_list):
-                print(board_no, title, board_date)  # 결과 데이터 라인
-                util.get_board_content_selenium(title,url,select_title)
+            if util.yesterday_check(yesterday_list, board_date):
+                if util.get_keyword_title(title, keyword_list):
+                    print(board_no, title, board_date)  # 결과 데이터 라인
+                # util.get_board_content_selenium(title,url,select_title)
                 # if 'href' in title_list.attrs:  # 제목 링크에 href가 존재할 경우만
                 #     title_href = title_list.get('href').replace('./', '')
                 #     print('href 가 있습니다 = ',content_url+title_href)
@@ -100,8 +100,8 @@ def print_test(row_num):
     print_RnD(url_dict_list[row_num], yesterday_list, keyword_list)
 
 
-# print_list()  # 인자로 rowNum을 주면 제외하고 크롤링
-print_test(2)
+print_list()  # 인자로 rowNum을 주면 제외하고 크롤링
+# print_test(15)
 
 print('++++++++++++++++++++++ 조회 완료 ++++++++++++++++++++++')
 
