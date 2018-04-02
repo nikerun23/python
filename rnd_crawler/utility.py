@@ -161,7 +161,7 @@ def valid_a_href(url, href):
 
 
 # """" 공고 게시판 내용을 가져옵니다 Dict 타입으로 반환 """
-def get_board_content(url, csv_info):
+def get_board_content(host_url, content_url, csv_info):
     select_list = [
         csv_info['content_Title'],
         csv_info['content_WriteDate'],
@@ -170,7 +170,7 @@ def get_board_content(url, csv_info):
         csv_info['content_Body'],
         csv_info['content_Files']
     ]
-    req = requests.get(url)
+    req = requests.get(host_url+content_url)
     html = req.text
 
     soup = bs(html, 'lxml')
@@ -180,15 +180,21 @@ def get_board_content(url, csv_info):
     try:
         for index,s in enumerate(select_list):
             if 'NoDate' != s and '' != s:
-                if 4 == index:  # csv_info['content_Body']
-                    html = soup.select_one(s).contents
-                elif index in (1, 2, 3):  # Date
+                if index == 0:  # content_Title
+                    html = soup.select_one(s).text
+                elif index in (2, 3):  # Date
                     # html = valid_date(soup.select_one(s).text, None).strftime('%Y-%m-%d')
                     html = ''
-                else:
-                    html = soup.select_one(s).text
+                elif index == 4:  # content_Body
+                    html = soup.select_one(s).contents
+                elif index == 5:  # content_Files
+                    file_list = soup.select(s)
+                    for i2, f in enumerate(file_list):
+                        file_list[i2] = host_url + f.get('href').replace(' ', '%20')
+                    html = file_list
             else:
                 html = 'NoDate'
+
             result_list.append(html)
     except Exception as e:
         print(e)
@@ -196,7 +202,7 @@ def get_board_content(url, csv_info):
 
     # print(result_list)
     content = {'title': valid_title(result_list[0]),
-               'url': url,
+               'url': host_url+content_url,
                'dept_cd': csv_info['부처'],
                'wc_company_name': csv_info['기관'],
                'write_date': csv_info['content_WriteDate'],
@@ -204,7 +210,7 @@ def get_board_content(url, csv_info):
                'end_date': result_list[3],
                'body': result_list[4],
                'files': result_list[5]}
-    print(content)
+    # print(content)
     return content
 
 
