@@ -161,7 +161,7 @@ def valid_a_href(url, href):
 
 
 # """" 공고 게시판 내용을 가져옵니다 Dict 타입으로 반환 """
-def get_board_content(host_url, content_url, csv_info):
+def get_board_content(content_url, csv_info):
     select_list = [
         csv_info['content_Title'],
         csv_info['content_WriteDate'],
@@ -170,7 +170,15 @@ def get_board_content(host_url, content_url, csv_info):
         csv_info['content_Body'],
         csv_info['content_Files']
     ]
-    req = requests.get(host_url+content_url)
+    if 'verify=False' == csv_info['etc_2']:
+        req = requests.get(content_url, verify=False)
+    else:
+        req = requests.get(content_url)
+    # etc_1 열
+    if 'utf-8' == csv_info['etc_1']:
+        req.encoding = 'utf-8'
+    elif 'euc-kr' == csv_info['etc_1']:
+        req.encoding = 'euc-kr'
     html = req.text
 
     soup = bs(html, 'lxml')
@@ -190,7 +198,7 @@ def get_board_content(host_url, content_url, csv_info):
                 elif index == 5:  # content_Files
                     file_list = soup.select(s)
                     for i2, f in enumerate(file_list):
-                        file_list[i2] = host_url + f.get('href').replace(' ', '%20')
+                        file_list[i2] = csv_info['content_File_url'] + f.get('href').replace(' ', '%20')
                     html = file_list
             else:
                 html = 'NoDate'
@@ -202,7 +210,7 @@ def get_board_content(host_url, content_url, csv_info):
 
     # print(result_list)
     content = {'title': valid_title(result_list[0]),
-               'url': host_url+content_url,
+               'url': content_url,
                'dept_cd': csv_info['부처'],
                'wc_company_name': csv_info['기관'],
                'write_date': csv_info['content_WriteDate'],
