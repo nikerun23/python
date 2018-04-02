@@ -194,7 +194,9 @@ def get_board_content(content_url, csv_info):
                     # html = valid_date(soup.select_one(s).text, None).strftime('%Y-%m-%d')
                     html = ''
                 elif index == 4:  # content_Body
-                    html = soup.select_one(s).contents
+                    # html = soup.select_one(s).contents  # list로 반환
+                    html = ''.join(str(item) for item in soup.select_one(s).contents)  # list로 반환된 body를 str로 변환
+                    html = html.replace('&amp;','&').replace('\n','').replace('\r','').replace('\t','').replace('\xad','').replace('\xa0','')  # \ 제거
                 elif index == 5:  # content_Files
                     file_list = soup.select(s)
                     for i2, f in enumerate(file_list):
