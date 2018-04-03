@@ -197,6 +197,9 @@ def get_board_content(content_url, csv_info):
                     # html = soup.select_one(s).contents  # list로 반환
                     html = ''.join(str(item) for item in soup.select_one(s).contents)  # list로 반환된 body를 str로 변환
                     html = html.replace('&amp;','&').replace('\n','').replace('\r','').replace('\t','').replace('\xad','').replace('\xa0','')  # \ 제거
+                    if 'src="/' in html:
+                        src = 'src="' + csv_info['content_File_url'] + '/'
+                        html = html.replace('src="/', src)
                 elif index == 5:  # content_Files
                     file_list = soup.select(s)
                     for i2, f in enumerate(file_list):
