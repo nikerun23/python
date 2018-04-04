@@ -187,26 +187,34 @@ def get_board_content(content_url, csv_info):
     result_list = []
     try:
         for index,s in enumerate(select_list):
-            if 'NoDate' != s and '' != s:
+            if '' != s:
                 if index == 0:  # content_Title
                     html = soup.select_one(s).text
-                elif index in (2, 3):  # Date
-                    # html = valid_date(soup.select_one(s).text, None).strftime('%Y-%m-%d')
-                    html = ''
+                elif index == 2:  # content_StartDate
+                    html = valid_date(soup.select_one(s).text, None).strftime('%Y-%m-%d')
+                elif index == 3:  # content_EndDate
+                    html = valid_date(soup.select_one(s).text, None).strftime('%Y-%m-%d')
                 elif index == 4:  # content_Body
                     # html = soup.select_one(s).contents  # list로 반환
-                    html = ''.join(str(item) for item in soup.select_one(s).contents)  # list로 반환된 body를 str로 변환
-                    html = html.replace('&amp;','&').replace('\n','').replace('\r','').replace('\t','').replace('\xad','').replace('\xa0','')  # \ 제거
-                    if 'src="/' in html:
-                        src = 'src="' + csv_info['content_File_url'] + '/'
-                        html = html.replace('src="/', src)
+                    if 'emptyBody' == s:
+                        html = result_list[0]
+                    else:
+                        html = ''.join(str(item) for item in soup.select_one(s).contents)  # list로 반환된 body를 str로 변환
+                        html = html.replace('&amp;','&').replace('\n','').replace('\r','').replace('\t','').replace('\xad','').replace('\xa0','').replace('\u200b','')  # \ 제거
+                        if 'src="/' in html:
+                            print('+++++++++ src="/ 수정 되었습니다 +++++++++')
+                            src = 'src="' + csv_info['content_File_url'] + '/'
+                            html = html.replace('src="/', src)
                 elif index == 5:  # content_Files
-                    file_list = soup.select(s)
-                    for i2, f in enumerate(file_list):
-                        file_list[i2] = csv_info['content_File_url'] + f.get('href').replace(' ', '%20')
+                    if 'onclick' != s:
+                        file_list = soup.select(s)
+                        for i2, f in enumerate(file_list):
+                            file_list[i2] = csv_info['content_File_url'] + f.get('href').replace(' ', '%20')
+                    else:
+                        file_list = []
                     html = file_list
             else:
-                html = 'NoDate'
+                html = 'NoData'
 
             result_list.append(html)
     except Exception as e:
