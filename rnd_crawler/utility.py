@@ -202,21 +202,19 @@ def get_board_content(content_url, csv_info):
                 elif index == 4:  # content_Body
                     # html = soup.select_one(s).contents  # list로 반환
                     if 'emptyBody' == s:
-                        html = result_list[0]
+                        html = result_list[0]  # 내용 없을 시 제목을 추가
                     else:
                         # html = ''.join(str(item) for item in soup.select_one(s).contents)  # list로 반환된 body를 str로 변환
                         for element in soup(text=lambda text: isinstance(text, Comment)):  # 주석은 제거한다.
                             element.extract()
                         html = soup.select_one(s).prettify(formatter="None")  # 글내용
-
-
-                        # print(soup.select_one(s).get_text)
-                        html = html.replace('\n','').replace('\r','').replace('\t','').replace('\xad','').replace('\xa0','').replace('\u200b','')  # \ 제거
+                        html = html.replace('\n','')  # 유니코드 제거
+                        # html = html.replace('\n','').replace('\r','').replace('\t','').replace('\xad','').replace('\xa0','').replace('\u200b','')  # 유니코드 제거
                         if 'src="/' in html:
                             print('+++++++++ src="/ 수정 되었습니다 +++++++++')
                             src = 'src="' + csv_info['content_File_url'] + '/'
                             html = html.replace('src="/', src)
-                        # <!-- --> 주석부분 정규식으로 제거
+
                 elif index == 5:  # content_Files
                     if 'onclick' != s:
                         file_list = soup.select(s)
