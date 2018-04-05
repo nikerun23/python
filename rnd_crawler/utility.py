@@ -7,6 +7,8 @@ from bs4 import BeautifulSoup as bs
 import telegram
 from multiprocessing import Pool
 
+global except_list
+except_list = []
 
 # """ 날짜를 검증합니다 """
 def valid_date(date_str, date_fm):
@@ -31,6 +33,7 @@ def valid_date(date_str, date_fm):
         date_time_str = datetime.datetime.strptime(date_str, '%Y-%m-%d')
     except Exception:
         print('########## 날짜 양식에 문제가 있습니다 :\n', date_str)
+        except_list.append({date_str: '########## 날짜 양식에 문제가 있습니다'})
         result = None
     else:
         result = datetime.date(date_time_str.year, date_time_str.month, date_time_str.day)
@@ -115,6 +118,7 @@ def selenium_read_board(csv_info):
         html = driver.page_source
     except Exception:
         print('########## Selenium 작동이 중지 되었습니다')
+        except_list.append({csv_info['기관']: '########## Selenium 작동이 중지 되었습니다'})
         html = ''
     finally:
         driver.quit()
@@ -147,6 +151,7 @@ def modify_date(date_str, date_fm):
 
     except Exception:
         print('########## 날짜 수정에 실패 하였습니다 :', result)
+        except_list.append({result: '########## 날짜 수정에 실패 하였습니다'})
         result = ''
     # print('result :', result)
     finally:
@@ -362,4 +367,7 @@ def get_board_content_selenium(title, url, select_title):
             # title.click()
             # time.sleep(2)
 
+
+def get_except_list():
+    return except_list
 
