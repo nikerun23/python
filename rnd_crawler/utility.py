@@ -2,6 +2,7 @@ import datetime
 import csv
 from selenium import webdriver
 import time
+import re
 import requests
 from bs4 import BeautifulSoup as bs, Comment
 import telegram
@@ -196,9 +197,18 @@ def get_board_content(content_url, csv_info):
                 if index == 0:  # content_Title
                     html = soup.select_one(s).text
                 elif index == 2:  # content_StartDate
-                    html = valid_date(soup.select_one(s).text, None).strftime('%Y-%m-%d')
+                    date_str = soup.select_one(s).text
+                    if 'YYYY-MM-DD~YYYY-MM-DD' == s:
+                        date_str = re.sub('[^0-9-]', '', date_str)
+                        date_str = date_str[:10]
+                    html = valid_date(date_str, None).strftime('%Y-%m-%d')
                 elif index == 3:  # content_EndDate
-                    html = valid_date(soup.select_one(s).text, None).strftime('%Y-%m-%d')
+                    date_str = soup.select_one(s).text
+                    if 'YYYY-MM-DD~YYYY-MM-DD' == s:
+                        date_str = re.sub('[^0-9-]', '', date_str)
+                        date_str = date_str[10:]
+                        date_str = soup.select_one(s).text.strip()[-10:]
+                    html = valid_date(date_str, None).strftime('%Y-%m-%d')
                 elif index == 4:  # content_Body
                     # html = soup.select_one(s).contents  # list로 반환
                     if 'emptyBody' == s:
