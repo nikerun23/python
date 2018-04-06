@@ -196,12 +196,9 @@ def get_board_content(content_url, csv_info):
             if '' != s:
                 if index == 0:  # content_Title
                     html = soup.select_one(s).text
-                elif index == 2:  # content_StartDate
+                elif index in (2,3):  # content_StartDate, content_EndDate
                     date_str = soup.select_one(s).text
-                    html = valid_start_end_date('start_date', date_str, csv_info['content_DateFormat'])
-                elif index == 3:  # content_EndDate
-                    date_str = soup.select_one(s).text
-                    html = valid_start_end_date('end_date', date_str, csv_info['content_DateFormat'])
+                    html = valid_start_end_date(index, date_str, csv_info['content_DateFormat'])
                 elif index == 4:  # content_Body
                     # html = soup.select_one(s).contents  # list로 반환
                     if 'emptyBody' == s:
@@ -384,9 +381,9 @@ def get_except_list():
 def valid_start_end_date(date_type, date_str, content_DateFormat):
     date_str = date_str.strip().replace(' ','')
     date_str = re.sub('[^0-9-]', '', date_str)  # 2017-12-292018-01-03
-    if 'start_date' == date_type:  # content_StartDate
+    if 2 == date_type:  # content_StartDate : 2
         date_str = date_str[:10]
-    elif 'end_date' == date_type:  # content_EndDate
+    elif 3 == date_type:  # content_EndDate : 3
         date_str = date_str[10:]
     return valid_date(date_str, None).strftime('%Y-%m-%d')
 
