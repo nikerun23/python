@@ -380,14 +380,13 @@ def get_except_list():
     return except_list
 
 
+# """" 공고 시작일, 마감일을 정제하여 반환합니다 """
 def valid_start_end_date(date_type, date_str, content_DateFormat):
     date_str = date_str.strip().replace(' ','')
+    date_str = re.sub('[^0-9-]', '', date_str)  # 2017-12-292018-01-03
     if 'start_date' == date_type:  # content_StartDate
-        date_str = re.sub('[^0-9-]', '', date_str)
         date_str = date_str[:10]
-        return valid_date(date_str, None).strftime('%Y-%m-%d')
     elif 'end_date' == date_type:  # content_EndDate
-        date_str = re.sub('[^0-9-]', '', date_str)
         date_str = date_str[10:]
-        return valid_date(date_str, None).strftime('%Y-%m-%d')
+    return valid_date(date_str, None).strftime('%Y-%m-%d')
 
