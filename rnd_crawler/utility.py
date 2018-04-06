@@ -198,17 +198,10 @@ def get_board_content(content_url, csv_info):
                     html = soup.select_one(s).text
                 elif index == 2:  # content_StartDate
                     date_str = soup.select_one(s).text
-                    if 'YYYY-MM-DD~YYYY-MM-DD' == s:
-                        date_str = re.sub('[^0-9-]', '', date_str)
-                        date_str = date_str[:10]
-                    html = valid_date(date_str, None).strftime('%Y-%m-%d')
+                    html = valid_start_end_date('start_date', date_str, csv_info['content_DateFormat'])
                 elif index == 3:  # content_EndDate
                     date_str = soup.select_one(s).text
-                    if 'YYYY-MM-DD~YYYY-MM-DD' == s:
-                        date_str = re.sub('[^0-9-]', '', date_str)
-                        date_str = date_str[10:]
-                        date_str = soup.select_one(s).text.strip()[-10:]
-                    html = valid_date(date_str, None).strftime('%Y-%m-%d')
+                    html = valid_start_end_date('end_date', date_str, csv_info['content_DateFormat'])
                 elif index == 4:  # content_Body
                     # html = soup.select_one(s).contents  # list로 반환
                     if 'emptyBody' == s:
@@ -385,4 +378,16 @@ def get_board_content_selenium(title, url, select_title):
 
 def get_except_list():
     return except_list
+
+
+def valid_start_end_date(date_type, date_str, content_DateFormat):
+    date_str = date_str.strip().replace(' ','')
+    if 'start_date' == date_type:  # content_StartDate
+        date_str = re.sub('[^0-9-]', '', date_str)
+        date_str = date_str[:10]
+        return valid_date(date_str, None).strftime('%Y-%m-%d')
+    elif 'end_date' == date_type:  # content_EndDate
+        date_str = re.sub('[^0-9-]', '', date_str)
+        date_str = date_str[10:]
+        return valid_date(date_str, None).strftime('%Y-%m-%d')
 
