@@ -208,15 +208,15 @@ def get_board_content(content_url, csv_info):
                         for element in soup(text=lambda text: isinstance(text, Comment)):  # 주석은 제거한다.
                             element.extract()
                         html = soup.select_one(s).prettify(formatter="None")  # 글내용
-                        html = html.replace('\n','')  # 유니코드 제거
-                        # html = html.replace('\n','').replace('\r','').replace('\t','').replace('\xad','').replace('\xa0','').replace('\u200b','')  # 유니코드 제거
+                        # html = html.replace('\n','')  # 유니코드 제거
+                        html = html.replace('\n','').replace('\r','').replace('\t','').replace('\xad','').replace('\xa0','').replace('\u200b','')  # 유니코드 제거
                         if 'src="/' in html:
                             print('+++++++++ src="/ 수정 되었습니다 +++++++++')
                             src = 'src="' + csv_info['content_File_url'] + '/'
                             html = html.replace('src="/', src)
 
                 elif index == 5:  # content_Files
-                    if 'onclick' != s:
+                    if 'onclick' != s and 'javascript' != s:
                         file_list = soup.select(s)
                         for i2, f in enumerate(file_list):
                             file_list[i2] = csv_info['content_File_url'] + f.get('href').replace(' ', '%20')
@@ -379,11 +379,13 @@ def get_except_list():
 
 # """" 공고 시작일, 마감일을 정제하여 반환합니다 """
 def valid_start_end_date(date_type, date_str, content_DateFormat):
-    date_str = date_str.strip().replace(' ','')
-    date_str = re.sub('[^0-9-]', '', date_str)  # 2017-12-292018-01-03
-    if 2 == date_type:  # content_StartDate : 2
-        date_str = date_str[:10]
-    elif 3 == date_type:  # content_EndDate : 3
-        date_str = date_str[10:]
+    if 'YYYY-MM-DD~YYYY-MM-DD' == content_DateFormat:
+        date_str = date_str.strip().replace(' ','')
+        date_str = re.sub('[^0-9-]', '', date_str)  # 2017-12-292018-01-03
+        if 2 == date_type:  # content_StartDate : 2
+            date_str = date_str[:10]
+        elif 3 == date_type:  # content_EndDate : 3
+            date_str = date_str[10:]
+
     return valid_date(date_str, None).strftime('%Y-%m-%d')
 
