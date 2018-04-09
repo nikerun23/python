@@ -2,10 +2,14 @@ import datetime
 import csv
 from selenium import webdriver
 import time
+import re
 import requests
-from bs4 import BeautifulSoup as bs
+from bs4 import BeautifulSoup as bs, Comment
 import telegram
 from multiprocessing import Pool
+
+global except_list
+except_list = []
 
 
 # """ 날짜를 검증합니다 """
@@ -31,6 +35,7 @@ def valid_date(date_str, date_fm):
         date_time_str = datetime.datetime.strptime(date_str, '%Y-%m-%d')
     except Exception:
         print('########## 날짜 양식에 문제가 있습니다 :\n', date_str)
+        except_list.append({date_str: '########## 날짜 양식에 문제가 있습니다'})
         result = None
     else:
         result = datetime.date(date_time_str.year, date_time_str.month, date_time_str.day)
@@ -115,6 +120,7 @@ def selenium_read_board(csv_info):
         html = driver.page_source
     except Exception:
         print('########## Selenium 작동이 중지 되었습니다')
+        except_list.append({csv_info['기관']: '########## Selenium 작동이 중지 되었습니다'})
         html = ''
     finally:
         driver.quit()
@@ -147,6 +153,7 @@ def modify_date(date_str, date_fm):
 
     except Exception:
         print('########## 날짜 수정에 실패 하였습니다 :', result)
+        except_list.append({result: '########## 날짜 수정에 실패 하였습니다'})
         result = ''
     # print('result :', result)
     finally:
@@ -154,14 +161,14 @@ def modify_date(date_str, date_fm):
 
 
 def valid_a_href(url, href):
-    domain_name = url[:url.find('.kr') + 3].replace(' ', '')
-    href = href.replace(' ', '').replace('&amp;', '&')
-    result = domain_name + href
+    href = href.replace(' ', '%20').replace('./', '/').replace('../', '/').replace('&amp;', '&')
+    # domain_name = url[:url.find('.kr') + 3].replace(' ', '')
+    result = url + href
     return result
 
 
 # """" 공고 게시판 내용을 가져옵니다 Dict 타입으로 반환 """
-def get_board_content(url, csv_info):
+def get_board_content(content_url, csv_info):
     select_list = [
         csv_info['content_Title'],
         csv_info['content_WriteDate'],
@@ -170,33 +177,65 @@ def get_board_content(url, csv_info):
         csv_info['content_Body'],
         csv_info['content_Files']
     ]
-    req = requests.get(url)
+    if 'verify=False' == csv_info['etc_2']:
+        req = requests.get(content_url, verify=False)
+    else:
+        req = requests.get(content_url)
+    # etc_1 열
+    if 'utf-8' == csv_info['etc_1']:
+        req.encoding = 'utf-8'
+    elif 'euc-kr' == csv_info['etc_1']:
+        req.encoding = 'euc-kr'
     html = req.text
 
     soup = bs(html, 'lxml')
 
     # print(req.text)
     result_list = []
-    try:
-        for index,s in enumerate(select_list):
-            if 'NoDate' != s and '' != s:
-                if 4 == index:  # csv_info['content_Body']
-                    html = soup.select_one(s).contents
-                elif index in (1, 2, 3):  # Date
-                    # html = valid_date(soup.select_one(s).text, None).strftime('%Y-%m-%d')
-                    html = ''
-                else:
+    for index,s in enumerate(select_list):
+        try:
+            if '' != s and 'NoData' != s:  # csv파일 공백
+                if index == 0:  # content_Title
                     html = soup.select_one(s).text
+                elif index in (2,3):  # content_StartDate, content_EndDate
+                    date_str = soup.select_one(s).text
+                    html = valid_start_end_date(index, date_str, csv_info['content_DateFormat'])
+                elif index == 4:  # content_Body
+                    # html = soup.select_one(s).contents  # list로 반환
+                    if 'emptyBody' == s:
+                        html = result_list[0]  # 내용 없을 시 제목을 추가
+                    else:
+                        # html = ''.join(str(item) for item in soup.select_one(s).contents)  # list로 반환된 body를 str로 변환
+                        for element in soup(text=lambda text: isinstance(text, Comment)):  # 주석은 제거한다.
+                            element.extract()
+                        html = soup.select_one(s).prettify(formatter="None")  # 글내용
+                        # html = html.replace('\n','')  # 유니코드 제거
+                        html = html.replace('\n','').replace('\r','').replace('\t','').replace('\xad','').replace('\xa0','').replace('\u200b','')  # 유니코드 제거
+                        if 'src="/' in html:
+                            print('+++++++++ src="/ 수정 되었습니다 +++++++++')
+                            src = 'src="' + csv_info['content_File_url'] + '/'
+                            html = html.replace('src="/', src)
+
+                elif index == 5:  # content_Files
+                    if 'onclick' != s and 'ajax' != s and 'javascript' != s:
+                        file_list = soup.select(s)
+                        for i2, f in enumerate(file_list):
+                            file_list[i2] = valid_a_href(csv_info['content_File_url'], f.get('href'))
+                    else:
+                        file_list = []
+                    html = file_list
             else:
-                html = 'NoDate'
+                html = 'NoData'
+        except Exception as e:
+            print(e)
+            print('########## get_board_content 예외발생 !! : ',index)
+            html = 'except NoData'
+        finally:
             result_list.append(html)
-    except Exception as e:
-        print(e)
-        print('########## get_board_content 예외발생 !!')
 
     # print(result_list)
     content = {'title': valid_title(result_list[0]),
-               'url': url,
+               'url': content_url,
                'dept_cd': csv_info['부처'],
                'wc_company_name': csv_info['기관'],
                'write_date': csv_info['content_WriteDate'],
@@ -204,7 +243,7 @@ def get_board_content(url, csv_info):
                'end_date': result_list[3],
                'body': result_list[4],
                'files': result_list[5]}
-    print(content)
+    # print(content)
     return content
 
 
@@ -335,4 +374,19 @@ def get_board_content_selenium(title, url, select_title):
             # title.click()
             # time.sleep(2)
 
+
+def get_except_list():
+    return except_list
+
+
+# """" 공고 시작일, 마감일을 정제하여 반환합니다 """
+def valid_start_end_date(date_type, date_str, content_DateFormat):
+    date_str = date_str.strip().replace(' ','').replace('.','-')
+    date_str = re.sub('[^0-9~-]', '', date_str)  # 2017-12-29~2018-01-03
+    if 'YYYY-MM-DD~YYYY-MM-DD' == content_DateFormat:
+        if 2 == date_type:  # content_StartDate : 2
+            date_str = date_str[:10]
+        elif 3 == date_type:  # content_EndDate : 3
+            date_str = date_str[date_str.find('~')+1:date_str.find('~')+11]
+    return valid_date(date_str, None).strftime('%Y-%m-%d')
 
