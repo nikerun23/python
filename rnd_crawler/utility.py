@@ -11,6 +11,7 @@ from multiprocessing import Pool
 global except_list
 except_list = []
 
+
 # """ 날짜를 검증합니다 """
 def valid_date(date_str, date_fm):
     if date_str in ('', None):
@@ -191,9 +192,9 @@ def get_board_content(content_url, csv_info):
 
     # print(req.text)
     result_list = []
-    try:
-        for index,s in enumerate(select_list):
-            if '' != s:
+    for index,s in enumerate(select_list):
+        try:
+            if '' != s and 'NoData' != s:  # csv파일 공백
                 if index == 0:  # content_Title
                     html = soup.select_one(s).text
                 elif index in (2,3):  # content_StartDate, content_EndDate
@@ -216,7 +217,7 @@ def get_board_content(content_url, csv_info):
                             html = html.replace('src="/', src)
 
                 elif index == 5:  # content_Files
-                    if 'onclick' != s and 'javascript' != s:
+                    if 'onclick' != s and 'ajax' != s and 'javascript' != s:
                         file_list = soup.select(s)
                         for i2, f in enumerate(file_list):
                             file_list[i2] = csv_info['content_File_url'] + f.get('href').replace(' ', '%20')
@@ -225,11 +226,12 @@ def get_board_content(content_url, csv_info):
                     html = file_list
             else:
                 html = 'NoData'
-
+        except Exception as e:
+            print(e)
+            print('########## get_board_content 예외발생 !!')
+            html = 'NoData'
+        finally:
             result_list.append(html)
-    except Exception as e:
-        print(e)
-        print('########## get_board_content 예외발생 !!')
 
     # print(result_list)
     content = {'title': valid_title(result_list[0]),
@@ -379,13 +381,12 @@ def get_except_list():
 
 # """" 공고 시작일, 마감일을 정제하여 반환합니다 """
 def valid_start_end_date(date_type, date_str, content_DateFormat):
+    date_str = date_str.strip().replace(' ','').replace('.','-')
+    date_str = re.sub('[^0-9~-]', '', date_str)  # 2017-12-29~2018-01-03
     if 'YYYY-MM-DD~YYYY-MM-DD' == content_DateFormat:
-        date_str = date_str.strip().replace(' ','')
-        date_str = re.sub('[^0-9-]', '', date_str)  # 2017-12-292018-01-03
         if 2 == date_type:  # content_StartDate : 2
             date_str = date_str[:10]
         elif 3 == date_type:  # content_EndDate : 3
-            date_str = date_str[10:]
-
+            date_str = date_str[date_str.find('~')+1:date_str.find('~')+11]
     return valid_date(date_str, None).strftime('%Y-%m-%d')
 
