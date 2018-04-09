@@ -60,6 +60,7 @@ class UtillityTestCase(unittest.TestCase):
     def test_start_end_date(self):
         date_list = {' 접수기간  2018-04-25 09시 ~ 2018-05-08 17시  ',
                      ' 접수 2018.04.25 ~ 2018.05.08 ',
+                     '2018-04-25~2018-05-08 진행중',
                      '2018-04-25~2018-05-08'
                      }
 
