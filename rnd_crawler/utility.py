@@ -161,9 +161,9 @@ def modify_date(date_str, date_fm):
 
 
 def valid_a_href(url, href):
-    domain_name = url[:url.find('.kr') + 3].replace(' ', '')
-    href = href.replace(' ', '').replace('&amp;', '&')
-    result = domain_name + href
+    href = href.replace(' ', '%20').replace('./', '/').replace('../', '/').replace('&amp;', '&')
+    # domain_name = url[:url.find('.kr') + 3].replace(' ', '')
+    result = url + href
     return result
 
 
@@ -220,7 +220,7 @@ def get_board_content(content_url, csv_info):
                     if 'onclick' != s and 'ajax' != s and 'javascript' != s:
                         file_list = soup.select(s)
                         for i2, f in enumerate(file_list):
-                            file_list[i2] = csv_info['content_File_url'] + f.get('href').replace(' ', '%20')
+                            file_list[i2] = valid_a_href(csv_info['content_File_url'], f.get('href'))
                     else:
                         file_list = []
                     html = file_list
@@ -228,8 +228,8 @@ def get_board_content(content_url, csv_info):
                 html = 'NoData'
         except Exception as e:
             print(e)
-            print('########## get_board_content 예외발생 !!')
-            html = 'NoData'
+            print('########## get_board_content 예외발생 !! : ',index)
+            html = 'except NoData'
         finally:
             result_list.append(html)
 
