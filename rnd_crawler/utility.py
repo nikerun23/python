@@ -21,11 +21,10 @@ def valid_date(date_str, date_fm):
     if date_fm in ('DD/nYY.MM', '|YYYY-MM-DD', '작성일YYYY-MM-DD'):  # 불규칙한 날짜를 보완 (과학기술정보통신부, 국가수리과학연구소)
         date_str = modify_date(date_str, date_fm)
     else:
-        date_str = date_str.strip()
-        date_str = date_str.replace(',', '-').replace('.', '-').replace('/', '-')
+        date_str = date_str.strip().replace(',', '-').replace('.', '-').replace('/', '-')
         # 마지막 '-' 삭제
-        if date_str[-1] == '-':
-            date_str = date_str[:-1]
+        if date_str.count('-') > 2:
+            date_str = date_str[:date_str.rfind('-')]
         # '~'있을시에 앞 날짜만 추출
         if '~' in date_str:
             date_str = date_str[:date_str.find('~')].replace('\n', '').replace('\t', '').strip()
@@ -33,7 +32,7 @@ def valid_date(date_str, date_fm):
             date_str = date_str[:date_str.find(':')-2]
         if '시' in date_str:  # HH시 포함되어 있을 경우 제거
             date_str = date_str[:date_str.find('시')-2]
-        date_str = date_str.replace(' ', '')
+        date_str = date_str.strip().replace(' ', '')
     # datetime 객체로 변환
     try:
         date_time_str = datetime.datetime.strptime(date_str, '%Y-%m-%d')
@@ -388,7 +387,7 @@ def get_except_list():
 def valid_start_end_date(date_type, date_str, content_DateFormat):
     # date_str = date_str.strip().replace(' ','').replace('.','-')
     date_str = date_str.strip().replace('.','-')
-    date_str = re.sub('[^0-9~:/\s-]', '', date_str)  # 2017-12-29~2018-01-03
+    date_str = re.sub('[^0-9~/시:\s-]', '', date_str)  # 2017-12-29~2018-01-03
     print('date_str :',date_str)
     if 'YYYY-MM-DD~YYYY-MM-DD' == content_DateFormat:
         if 2 == date_type:  # content_StartDate : 2
@@ -396,7 +395,8 @@ def valid_start_end_date(date_type, date_str, content_DateFormat):
             # date_str = date_str[:date_str.rfind(' ')]
         elif 3 == date_type:  # content_EndDate : 3
             # print(date_str.find('~'),date_str)
-            date_str = date_str[date_str.find('~')+1:date_str.find('~')+11]
+            # date_str = date_str[date_str.find('~')+1:date_str.find('~')+11]
+            date_str = date_str[date_str.find('~')+1:]
             print('valid_start_end_date :',date_str)
             # print(date_str.find('~')+11,date_str)
             #
