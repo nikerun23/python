@@ -20,17 +20,21 @@ class UtillityTestCase(unittest.TestCase):
             '2017. 01.01',
             '2017. 1.01.',
             '2017.1.1',
+            '2017. 1. 1',
             '2017-1-1 ~ 2017-2-2',
-            '2018.02.20~2018.03.19',
-            '''2018-02-20 ~ 2018-02-27
+            '2018.01.01~2018.03.19',
+            '''2018-01-01 ~ 2018-02-27
 
                         / 오늘 마감''',
-            '''2017-12-07
+            '''2017-1-01
                ~
-               2018-12-31'''
+               2018-12-31''',
+            '2017.01.01 12:00',
+            '2017.1.1 12:00'
         ]
         for dt in date_temp:
             self.assertEqual(datetime.date, util.valid_date(dt, None).__class__)
+            print(util.valid_date(dt, None))
 
     # 날짜 수정 테스트
     def test_modify_date(self):

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import datetime
 import csv
 from selenium import webdriver
@@ -26,10 +28,9 @@ def valid_date(date_str, date_fm):
             date_str = date_str[:-1]
         # '~'있을시에 앞 날짜만 추출
         if '~' in date_str:
-            date_str = date_str[:date_str.find('~')]
-            date_str = date_str.replace('\n', '').replace('\t', '').strip()
+            date_str = date_str[:date_str.find('~')].replace('\n', '').replace('\t', '').strip()
         if ':' in date_str:  # HH:MM 포함되어 있을 경우 제거
-            date_str = date_str[:10]
+            date_str = date_str[:date_str.find(':')-2]
     # datetime 객체로 변환
     try:
         date_time_str = datetime.datetime.strptime(date_str, '%Y-%m-%d')
@@ -208,7 +209,8 @@ def get_board_content(content_url, csv_info):
                         # html = ''.join(str(item) for item in soup.select_one(s).contents)  # list로 반환된 body를 str로 변환
                         for element in soup(text=lambda text: isinstance(text, Comment)):  # 주석은 제거한다.
                             element.extract()
-                        html = soup.select_one(s).prettify(formatter="None")  # 글내용
+                        # html = soup.select_one(s).prettify(formatter="None")  # 글내용
+                        html = soup.select_one(s).get_text()  # (str)글내용
                         # html = html.replace('\n','')  # 유니코드 제거
                         html = html.replace('\n','').replace('\r','').replace('\t','').replace('\xad','').replace('\xa0','').replace('\u200b','')  # 유니코드 제거
                         if 'src="/' in html:
@@ -387,6 +389,18 @@ def valid_start_end_date(date_type, date_str, content_DateFormat):
         if 2 == date_type:  # content_StartDate : 2
             date_str = date_str[:10]
         elif 3 == date_type:  # content_EndDate : 3
+            print(date_str.find('~'),date_str)
             date_str = date_str[date_str.find('~')+1:date_str.find('~')+11]
+            print(date_str.find('~')+11,date_str)
+
+            print(date_str.rfind('-'))
+            print(date_str[date_str.rfind('-'):])
+            print(len(date_str[date_str.rfind('-'):]))
+            if len(date_str[date_str.rfind('-'):]) > 3:
+                ff = date_str[:date_str.rfind('-')]
+                print('ff :',ff)
+                bb = date_str[date_str.rfind('-'):-1]
+                print('bb :',bb)
+                date_str = ff + bb
     return valid_date(date_str, None).strftime('%Y-%m-%d')
 
