@@ -22,7 +22,7 @@ def valid_date(date_str, date_fm):
         date_str = modify_date(date_str, date_fm)
     else:
         date_str = date_str.strip()
-        date_str = date_str.replace(' ', '').replace(',', '-').replace('.', '-').replace('/', '-')
+        date_str = date_str.replace(',', '-').replace('.', '-').replace('/', '-')
         # 마지막 '-' 삭제
         if date_str[-1] == '-':
             date_str = date_str[:-1]
@@ -31,6 +31,9 @@ def valid_date(date_str, date_fm):
             date_str = date_str[:date_str.find('~')].replace('\n', '').replace('\t', '').strip()
         if ':' in date_str:  # HH:MM 포함되어 있을 경우 제거
             date_str = date_str[:date_str.find(':')-2]
+        if '시' in date_str:  # HH시 포함되어 있을 경우 제거
+            date_str = date_str[:date_str.find('시')-2]
+        date_str = date_str.replace(' ', '')
     # datetime 객체로 변환
     try:
         date_time_str = datetime.datetime.strptime(date_str, '%Y-%m-%d')
@@ -383,24 +386,28 @@ def get_except_list():
 
 # """" 공고 시작일, 마감일을 정제하여 반환합니다 """
 def valid_start_end_date(date_type, date_str, content_DateFormat):
-    date_str = date_str.strip().replace(' ','').replace('.','-')
-    date_str = re.sub('[^0-9~-]', '', date_str)  # 2017-12-29~2018-01-03
+    # date_str = date_str.strip().replace(' ','').replace('.','-')
+    date_str = date_str.strip().replace('.','-')
+    date_str = re.sub('[^0-9~:/\s-]', '', date_str)  # 2017-12-29~2018-01-03
+    print('date_str :',date_str)
     if 'YYYY-MM-DD~YYYY-MM-DD' == content_DateFormat:
         if 2 == date_type:  # content_StartDate : 2
-            date_str = date_str[:10]
+            date_str = date_str[:date_str.find('~')]
+            # date_str = date_str[:date_str.rfind(' ')]
         elif 3 == date_type:  # content_EndDate : 3
-            print(date_str.find('~'),date_str)
+            # print(date_str.find('~'),date_str)
             date_str = date_str[date_str.find('~')+1:date_str.find('~')+11]
-            print(date_str.find('~')+11,date_str)
-
-            print(date_str.rfind('-'))
-            print(date_str[date_str.rfind('-'):])
-            print(len(date_str[date_str.rfind('-'):]))
-            if len(date_str[date_str.rfind('-'):]) > 3:
-                ff = date_str[:date_str.rfind('-')]
-                print('ff :',ff)
-                bb = date_str[date_str.rfind('-'):-1]
-                print('bb :',bb)
-                date_str = ff + bb
+            print('valid_start_end_date :',date_str)
+            # print(date_str.find('~')+11,date_str)
+            #
+            # print(date_str.rfind('-'))
+            # print(date_str[date_str.rfind('-'):])
+            # print(len(date_str[date_str.rfind('-'):]))
+            # if len(date_str[date_str.rfind('-'):]) > 3:
+            #     ff = date_str[:date_str.rfind('-')]
+            #     print('ff :',ff)
+            #     bb = date_str[date_str.rfind('-'):-1]
+            #     print('bb :',bb)
+            #     date_str = ff + bb
     return valid_date(date_str, None).strftime('%Y-%m-%d')
 
