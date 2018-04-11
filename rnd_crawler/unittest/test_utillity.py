@@ -12,6 +12,7 @@ class UtillityTestCase(unittest.TestCase):
         date_temp = [
             '2017-01-01',
             '2017/01/01',
+            ' 2017/01/01/ ',
             '  2017-01-01   ',
             '2017,01,01',
             '2017.01.01',
@@ -47,12 +48,12 @@ class UtillityTestCase(unittest.TestCase):
                 18.02
                 '''
         self.assertEqual('2018-02-26', util.modify_date(date_str, date_fm))
-        date_str = '''작성일 : 
+        date_str = ''' 작성일 : 
                         26
-                        18.02'''
+                        18.02 '''
         self.assertEqual('2018-02-26', util.modify_date(date_str, date_fm))
-        date_str = '''26
-                        18.02'''
+        date_str = ''' 26
+                        18.02 '''
         self.assertEqual('2018-02-26', util.modify_date(date_str, date_fm))
 
         date_fm = '|YYYY-MM-DD'
@@ -76,10 +77,11 @@ class UtillityTestCase(unittest.TestCase):
                      '2018-04-25~2018-05-08',
                      '2018-04-25 12:00 ~ 2018-05-08 24:00',
                      '2018-04-25 ~ 2018-05-08 24:00',
-                     '2018.4.25 ~ 2018.5.8 24:00'
+                     '2018.4.25 ~ 2018.5.8 24:00',
+                     '2018/04/25 ~ 2018/05/08'
                      }
 
         for dt in date_list:
             self.assertEqual('2018-04-25', util.valid_start_end_date(2, dt,'YYYY-MM-DD~YYYY-MM-DD'))
-            # self.assertEqual('2018-05-08', util.valid_start_end_date(3, dt, 'YYYY-MM-DD~YYYY-MM-DD'))
+            self.assertEqual('2018-05-08', util.valid_start_end_date(3, dt, 'YYYY-MM-DD~YYYY-MM-DD'))
 
