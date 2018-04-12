@@ -39,6 +39,8 @@ class UtillityTestCase(unittest.TestCase):
         for dt in date_temp:
             self.assertEqual(datetime.date, util.valid_date(dt, None).__class__)
             print(util.valid_date(dt, None))
+        self.assertEqual(None, util.valid_date('    ', None))
+        self.assertEqual(None, util.valid_date('', None))
 
     # 날짜 수정 테스트
     def test_modify_date(self):
@@ -78,10 +80,19 @@ class UtillityTestCase(unittest.TestCase):
                      '2018-04-25 12:00 ~ 2018-05-08 24:00',
                      '2018-04-25 ~ 2018-05-08 24:00',
                      '2018.4.25 ~ 2018.5.8 24:00',
-                     '2018/04/25 ~ 2018/05/08'
+                     '2018/04/25 ~ 2018/05/08',
+                     '''  
+                         2018/04/25 ~ 2018/05/08
+                        접수중
+                        '''
                      }
 
         for dt in date_list:
             self.assertEqual('2018-04-25', util.valid_start_end_date(2, dt,'YYYY-MM-DD~YYYY-MM-DD'))
             self.assertEqual('2018-05-08', util.valid_start_end_date(3, dt, 'YYYY-MM-DD~YYYY-MM-DD'))
+
+        self.assertEqual('', util.valid_start_end_date(3, '  ', 'YYYY-MM-DD~YYYY-MM-DD'))
+        self.assertEqual('2018-04-25', util.valid_start_end_date(3, ''' 
+			    2018-04-25
+			    ''', 'YYYY-MM-DD~YYYY-MM-DD'))
 
