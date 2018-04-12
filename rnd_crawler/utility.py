@@ -211,9 +211,11 @@ def get_board_content(content_url, csv_info):
                         # html = ''.join(str(item) for item in soup.select_one(s).contents)  # list로 반환된 body를 str로 변환
                         for element in soup(text=lambda text: isinstance(text, Comment)):  # 주석은 제거한다.
                             element.extract()
+
                         html = soup.select_one(s).prettify(formatter="None")  # 글내용
+                        html = re.sub('<script.*?>.*?</script>', '', html, 0, re.I | re.DOTALL)  # <script>태그를 글내용에서 제거한다. 0=모두삭제 re.I=대소문자모두 re.DOTALL=여러줄탐색
                         # html = soup.select_one(s).get_text()  # (str)글내용
-                        html = html.replace('\n','').replace('\r','').replace('\t','').replace('\xad','').replace('\xa0','').replace('\u200b','')  # 유니코드 제거
+                        html = html.replace('\n','').replace('\r','').replace('\t','').replace('\xad','').replace('\xa0','').replace('\u200b','').replace("\'",'`')  # 유니코드 제거
                         if 'src="/' in html:
                             print('+++++++++ src="/ 수정 되었습니다 +++++++++')
                             src = 'src="' + csv_info['content_File_url'] + '/'
