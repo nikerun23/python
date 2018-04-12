@@ -16,7 +16,7 @@ except_list = []
 
 # """ 날짜를 검증합니다 """
 def valid_date(date_str, date_fm):
-    if date_str is None or re.match('(.*)[0-9]+', date_str) is None:
+    if date_str is None or re.match('(.*)[0-9]+', date_str, re.DOTALL) is None:  # 숫자가 없으면 return None
         return None
     if date_fm in ('DD/nYY.MM', '|YYYY-MM-DD', '작성일YYYY-MM-DD'):  # 불규칙한 날짜를 보완 (과학기술정보통신부, 국가수리과학연구소)
         date_str = modify_date(date_str, date_fm)
@@ -384,7 +384,9 @@ def get_except_list():
 
 # """" 공고 시작일, 마감일을 정제하여 반환합니다 """
 def valid_start_end_date(date_type, date_str, content_DateFormat):
-    if re.match('(.*)[0-9]+', date_str) is None:  # 숫자가 없으면 return ''
+    # date_str = date_str.replace('\n','')
+    if re.match('(.*)[0-9]+', date_str, re.DOTALL) is None:  # 숫자가 없으면 return ''
+        print('########## 숫자가 없습니다.',date_str)
         return ''
     # date_str = date_str.strip().replace(' ','').replace('.','-')
     date_str = date_str.strip().replace('.','-')
