@@ -17,6 +17,7 @@ def print_RnD(csv_info, yesterday_list, keyword_list):
     etc_2_str = csv_info['etc_2']
     date_format = csv_info['DateFormat']
     content_url = csv_info['a_href']
+    html = ''
 
     if 'Ajax' == etc_1_str:  # Selenium
         html = util.selenium_read_board(csv_info)
@@ -29,10 +30,10 @@ def print_RnD(csv_info, yesterday_list, keyword_list):
                 req = requests.get(url)
         except ConnectionRefusedError as e:
             print(e)
-            print('########## req.get 예외발생 !!')
-        except TimeoutError as e:
+            print('########## req.get ConnectionRefusedError 예외발생 !!')
+        except ConnectionError as e:
             print(e)
-            print('########## req.get 예외발생 !!')
+            print('########## req.get ConnectionError 예외발생 !!')
         else:
             # etc_1 열
             if 'utf-8' == etc_1_str:
@@ -44,7 +45,7 @@ def print_RnD(csv_info, yesterday_list, keyword_list):
     # print(html)
     if '' == html:
         print('########## HTML에 정보가 없습니다 !!')
-        return
+        return None
 
     soup = bs(html, 'lxml')
     board_list = soup.select(select_tr)
@@ -58,29 +59,30 @@ def print_RnD(csv_info, yesterday_list, keyword_list):
             date_list = tr.select_one(select_date)
             board_date = util.valid_date(date_list.text, date_format)  # datetime객체로 반환
             # 전일 공고만 출력
-            if util.yesterday_check(yesterday_list, board_date):
-                if util.get_keyword_title(title, keyword_list):
-                    print(board_no, title, board_date)  # 결과 데이터 라인
-            #     # util.get_board_content_selenium(title,url,select_title)
-            # if 'href' in title_list.attrs:  # 제목 링크에 href가 존재할 경우만
-            #     title_href = title_list.get('href').replace('./', '')
-            #     print('href 가 있습니다 =',content_url+title_href)
-            #     csv_info['content_WriteDate'] = board_date.strftime('%Y-%m-%d')
-            #     rnd_content = util.get_board_content(content_url+title_href, csv_info)
-            #     print(rnd_content)
-            #     print('============================================================')
-                # if 'onclick' in title_list.attrs:  # 제목 링크에 onclick 존재할 경우만
-                #     onclick = title_list.attrs['onclick']
-                #     print('onclick 가 있습니다 = ', title_list.attrs['onclick'])
-                #     title_href = onclick[onclick.find("'")+1:onclick.rfind("'")]
-                #     print(content_url+title_href)
-                #
-                # print(board_no, title, board_date, '\n',content_url+title_href)
+            # if util.yesterday_check(yesterday_list, board_date):
+            #     if util.get_keyword_title(title, keyword_list):
+            #         print(board_no, title, board_date)  # 결과 데이터 라인
+            # util.get_board_content_selenium(title,url,select_title)
+
+            if 'href' in title_list.attrs:  # 제목 링크에 href가 존재할 경우만
+                if 'http' in content_url[:7]:
+                    title_url = util.valid_a_href(content_url,title_list.get('href'))
+                    print('href 가 있습니다 =',title_url)
+                    csv_info['content_WriteDate'] = board_date.strftime('%Y-%m-%d')
+                    rnd_content = util.get_board_content(title_url, csv_info)
+                    print(rnd_content)
+                    print('============================================================')
+            # if 'onclick' in title_list.attrs:  # 제목 링크에 onclick 존재할 경우만
+            #     onclick = title_list.attrs['onclick']
+            #     print('onclick 가 있습니다 = ', title_list.attrs['onclick'])
+            #     title_href = onclick[onclick.find("'")+1:onclick.rfind("'")]
+            #     print(content_url+title_href)
+            #
+            # print(board_no, title, board_date, '\n',content_url+title_href)
 
 
-                # util.write_board_selenium(rnd_content)
+            # util.write_board_selenium(rnd_content)
         except AttributeError as e:
-            # TimeoutError, ConnectionRefusedError
             print(e)
             print('########## Attribute Error PASS !!')
             pass
@@ -89,7 +91,8 @@ def print_RnD(csv_info, yesterday_list, keyword_list):
 
 # +++++++++++ Main start +++++++++++++++++++++++++++++++++
 
-url_dict_list = util.csv_read_url('csv/url_list.csv')
+# url_dict_list = util.csv_read_url('csv/url_list.csv')
+url_dict_list = util.csv_read_url('csv/url_list - google.csv')
 keyword_list = util.csv_read_keyword('csv/search_keyword.csv')
 yesterday_list = util.get_yesterday_list()
 # yesterday_list = [datetime.date(2018, 2, 27)]
@@ -112,7 +115,8 @@ def print_test(row_num):
 
 
 # print_list()  # 인자로 rowNum을 주면 제외하고 크롤링
-print_test(78)
+print_test(114)
 
+print('예외발생 : ',util.get_except_list())
 print('++++++++++++++++++++++ 조회 완료 ++++++++++++++++++++++')
 
