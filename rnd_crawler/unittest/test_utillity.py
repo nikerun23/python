@@ -7,8 +7,7 @@ class UtillityTestCase(unittest.TestCase):
 
     # 날짜 정제 테스트
     def test_valid_date(self):
-        self.assertIsNone(util.valid_date('', None))
-        self.assertIsNone(util.valid_date(None, None))
+
         date_temp = [
             '2017-01-01',
             '2017/01/01',
@@ -39,8 +38,12 @@ class UtillityTestCase(unittest.TestCase):
         for dt in date_temp:
             self.assertEqual(datetime.date, util.valid_date(dt, None).__class__)
             print(util.valid_date(dt, None))
-        self.assertEqual(None, util.valid_date('    ', None))
-        self.assertEqual(None, util.valid_date('', None))
+        self.assertIsNone(util.valid_date('    ', None))
+        self.assertIsNone(util.valid_date('', None))
+        self.assertIsNone(util.valid_date(None, None))
+        self.assertEqual(datetime.date, util.valid_date('''작성일 : 
+09
+18.04''', 'DD/nYY.MM').__class__)
 
     # 날짜 수정 테스트
     def test_modify_date(self):
@@ -88,7 +91,7 @@ class UtillityTestCase(unittest.TestCase):
                      }
 
         for dt in date_list:
-            self.assertEqual('2018-04-25', util.valid_start_end_date(2, dt,'YYYY-MM-DD~YYYY-MM-DD'))
+            self.assertEqual('2018-04-25', util.valid_start_end_date(2, dt, 'YYYY-MM-DD~YYYY-MM-DD'))
             self.assertEqual('2018-05-08', util.valid_start_end_date(3, dt, 'YYYY-MM-DD~YYYY-MM-DD'))
 
         self.assertEqual('', util.valid_start_end_date(3, '  ', 'YYYY-MM-DD~YYYY-MM-DD'))
