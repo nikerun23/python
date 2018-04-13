@@ -106,12 +106,12 @@ def csv_read_url(src):
 
 # """" Selenium을 이용하여 (str)Html 반환 """
 def selenium_read_board(csv_info):
+    options = webdriver.ChromeOptions()
+    options.add_argument("--disable-extensions")
+    options.add_argument("--start-maximized")
+    driver = webdriver.Chrome('./chromedriver', chrome_options=options)
+    driver.set_page_load_timeout(60)  # selenium timeout 60초
     try:
-        options = webdriver.ChromeOptions()
-        options.add_argument("--disable-extensions")
-        options.add_argument("--start-maximized")
-        driver = webdriver.Chrome('./chromedriver', chrome_options=options)
-
         driver.get(csv_info['URL'])
         time.sleep(5)
         click_css_list = {}
@@ -193,7 +193,7 @@ def get_board_content(content_url, csv_info):
 
     soup = bs(html, 'lxml')
 
-    # print(req.text)
+    print(html)
     result_list = []
     for index,s in enumerate(select_list):
         try:
