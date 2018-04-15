@@ -391,13 +391,21 @@ def valid_start_end_date(date_type, date_str, content_DateFormat):
         print('########## 숫자가 없습니다.',date_str)
         return ''
     # date_str = date_str.strip().replace(' ','').replace('.','-')
-    date_str = date_str.strip().replace('.','-')
+    date_str = date_str.strip().replace('.','-').replace('/','-')
     date_str = re.sub('[^0-9~/시:\s-]', '', date_str)  # 2017-12-29~2018-01-03
     if 'YYYY-MM-DD~YYYY-MM-DD' == content_DateFormat:
         if 2 == date_type:  # content_StartDate : 2
             date_str = date_str[:date_str.find('~')]
         elif 3 == date_type:  # content_EndDate : 3
+            year_str = date_str[:date_str.find('-')].strip()
+            # print('year_str :',year_str)
             date_str = date_str[date_str.find('~')+1:]
+            print('date_str :',date_str)
+            if year_str not in date_str:
+                print('year_str :',year_str)
+                print('연도가 없습니다.')
+                date_str = year_str + '-' + date_str.strip()
+            print('date_str :',date_str)
         print('valid_start_end_date :',date_str)
     return valid_date(date_str, None).strftime('%Y-%m-%d')
 
