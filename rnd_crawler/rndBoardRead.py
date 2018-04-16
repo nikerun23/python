@@ -64,7 +64,7 @@ def print_RnD(csv_info, yesterday_list, keyword_list):
             #         print(board_no, title, board_date)  # 결과 데이터 라인
             # util.get_board_content_selenium(title,url,select_title)
 
-            if 'href' in title_list.attrs:  # 제목 링크에 href가 존재할 경우만
+            if 'href' in title_list.attrs and board_date is not None:  # 제목 링크에 href가 존재할 경우만
                 if 'http' in content_url[:7]:
                     title_url = util.valid_a_href(content_url,title_list.get('href'))
                     print('href 가 있습니다 =',title_url)
@@ -115,7 +115,7 @@ def print_test(row_num):
 
 
 # print_list()  # 인자로 rowNum을 주면 제외하고 크롤링
-print_test(90)
+print_test(113)
 
 print('예외발생 : ',util.get_except_list())
 print('++++++++++++++++++++++ 조회 완료 ++++++++++++++++++++++')
