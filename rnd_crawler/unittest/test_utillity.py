@@ -39,6 +39,9 @@ class UtillityTestCase(unittest.TestCase):
             self.assertEqual(datetime.date, util.valid_date(dt, None).__class__)
             print(util.valid_date(dt, None))
         self.assertIsNone(util.valid_date('    ', None))
+        self.assertIsNone(util.valid_date('''  
+            
+                   ''', None))
         self.assertIsNone(util.valid_date('', None))
         self.assertIsNone(util.valid_date(None, None))
         self.assertEqual(datetime.date, util.valid_date('''작성일 : 
@@ -83,6 +86,8 @@ class UtillityTestCase(unittest.TestCase):
                      '2018-04-25 12:00 ~ 2018-05-08 24:00',
                      '2018-04-25 ~ 2018-05-08 24:00',
                      '2018.4.25 ~ 2018.5.8 24:00',
+                     '2018.4.25 ~ 5.8',
+                     '2018.4.25 ~ 5.8 12시까지 마감',
                      '2018/04/25 ~ 2018/05/08',
                      '''  
                          2018/04/25 ~ 2018/05/08

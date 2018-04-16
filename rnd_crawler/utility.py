@@ -17,6 +17,7 @@ except_list = []
 # """ 날짜를 검증합니다 """
 def valid_date(date_str, date_fm):
     if date_str is None or re.match('(.*)[0-9]+', date_str, re.DOTALL) is None:  # 숫자가 없으면 return None
+        print('########## 숫자가 없습니다 :', date_str)
         return None
     if date_fm in ('DD/nYY.MM', '|YYYY-MM-DD', '작성일YYYY-MM-DD'):  # 불규칙한 날짜를 보완 (과학기술정보통신부, 국가수리과학연구소)
         date_str = modify_date(date_str, date_fm)
@@ -388,16 +389,19 @@ def get_except_list():
 def valid_start_end_date(date_type, date_str, content_DateFormat):
     # date_str = date_str.replace('\n','')
     if re.match('(.*)[0-9]+', date_str, re.DOTALL) is None:  # 숫자가 없으면 return ''
-        print('########## 숫자가 없습니다.',date_str)
+        print('########## 숫자가 없습니다 :',date_str)
         return ''
-    # date_str = date_str.strip().replace(' ','').replace('.','-')
-    date_str = date_str.strip().replace('.','-')
+    date_str = date_str.strip().replace('.','-').replace('/','-')
     date_str = re.sub('[^0-9~/시:\s-]', '', date_str)  # 2017-12-29~2018-01-03
     if 'YYYY-MM-DD~YYYY-MM-DD' == content_DateFormat:
         if 2 == date_type:  # content_StartDate : 2
             date_str = date_str[:date_str.find('~')]
         elif 3 == date_type:  # content_EndDate : 3
+            year_str = date_str[:date_str.find('-')].strip()
             date_str = date_str[date_str.find('~')+1:]
-        print('valid_start_end_date :',date_str)
+            if year_str not in date_str:  # 마감일에 연도 없을 경우 시작일의 연도를 붙여준다
+                date_str = year_str + '-' + date_str.strip()
+    print('date_str :',date_str, '시작일' if date_type == 2 else '마감일')
+    print('result :',valid_date(date_str, None).strftime('%Y-%m-%d'))
     return valid_date(date_str, None).strftime('%Y-%m-%d')
 
