@@ -17,7 +17,7 @@ except_list = []
 # """ 날짜를 검증합니다 """
 def valid_date(date_str, date_fm):
     if date_str is None or re.match('(.*)[0-9]+', date_str, re.DOTALL) is None:  # 숫자가 없으면 return None
-        print('########## 숫자가 없습니다 :', date_str)
+        print('########## 날짜에 숫자가 없습니다 :', date_str)
         return None
     if date_fm in ('DD/nYY.MM', '|YYYY-MM-DD', '작성일YYYY-MM-DD'):  # 불규칙한 날짜를 보완 (과학기술정보통신부, 국가수리과학연구소)
         date_str = modify_date(date_str, date_fm)
@@ -194,7 +194,7 @@ def get_board_content(content_url, csv_info):
 
     soup = bs(html, 'lxml')
 
-    print(html)
+    # print(html)
     result_list = []
     for index,s in enumerate(select_list):
         try:
@@ -202,8 +202,11 @@ def get_board_content(content_url, csv_info):
                 if index == 0:  # content_Title
                     html = soup.select_one(s).text
                 elif index in (2,3):  # content_StartDate, content_EndDate
-                    date_str = soup.select_one(s).text
-                    html = valid_start_end_date(index, date_str, csv_info['content_DateFormat'])
+                    if 2 == index and 'content_WriteDate' == s:  # 공고일을 공고 시작일로 한다
+                        html = csv_info['content_WriteDate']
+                    else:
+                        date_str = soup.select_one(s).text
+                        html = valid_start_end_date(index, date_str, csv_info['content_DateFormat'])
                 elif index == 4:  # content_Body
                     # html = soup.select_one(s).contents  # list로 반환
                     if 'emptyBody' == s:
