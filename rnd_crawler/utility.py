@@ -196,27 +196,30 @@ def get_board_content(content_url, csv_info):
 
     # print(html)
     result_list = []
-    for index,s in enumerate(select_list):
+    for index, css_select in enumerate(select_list):
         try:
-            if '' != s and 'NoData' != s:  # csv파일 공백
-                if index == 0:  # content_Title
-                    html = soup.select_one(s).text
-                elif index in (2,3):  # content_StartDate, content_EndDate
-                    if 2 == index and 'content_WriteDate' == s:  # 공고일을 공고 시작일로 한다
+            if '' != css_select and 'NoData' != css_select:  # csv파일 공백
+                # content_Title
+                if index == 0:
+                    html = soup.select_one(css_select).text
+                # content_StartDate, content_EndDate
+                elif index in (2,3):
+                    if 2 == index and 'content_WriteDate' == css_select:  # 공고일을 공고 시작일로 한다
                         html = csv_info['content_WriteDate']
                     else:
-                        date_str = soup.select_one(s).text
+                        date_str = soup.select_one(css_select).text
                         html = valid_start_end_date(index, date_str, csv_info['content_DateFormat'])
-                elif index == 4:  # content_Body
+                # content_Body
+                elif index == 4:
                     # html = soup.select_one(s).contents  # list로 반환
-                    if 'emptyBody' == s:
+                    if 'emptyBody' == css_select:
                         html = result_list[0]  # 내용 없을 시 제목을 추가
                     else:
                         # html = ''.join(str(item) for item in soup.select_one(s).contents)  # list로 반환된 body를 str로 변환
                         for element in soup(text=lambda text: isinstance(text, Comment)):  # 주석은 제거한다.
                             element.extract()
 
-                        html = soup.select_one(s).prettify(formatter="None")  # 글내용
+                        html = soup.select_one(css_select).prettify(formatter="None")  # 글내용
                         html = re.sub('<script.*?>.*?</script>', '', html, 0, re.I | re.DOTALL)  # <script>태그를 글내용에서 제거한다. 0=모두삭제 re.I=대소문자모두 re.DOTALL=여러줄탐색
                         # html = soup.select_one(s).get_text()  # (str)글내용
                         html = html.replace('\n','').replace('\r','').replace('\t','').replace('\xad','').replace('\xa0','').replace('\u200b','').replace("\'",'`')  # 유니코드 제거
@@ -224,10 +227,10 @@ def get_board_content(content_url, csv_info):
                             print('+++++++++ src="/ 수정 되었습니다 +++++++++')
                             src = 'src="' + csv_info['content_File_url'] + '/'
                             html = html.replace('src="/', src)
-
-                elif index == 5:  # content_Files
-                    if 'onclick' != s and 'ajax' != s and 'javascript' != s:
-                        file_list = soup.select(s)
+                # content_Files
+                elif index == 5:
+                    if 'onclick' != css_select and 'ajax' != css_select and 'javascript' != css_select:
+                        file_list = soup.select(css_select)
                         for i2, f in enumerate(file_list):
                             file_dict = {'file_name': f.text.strip(), 'url': valid_a_href(csv_info['content_File_url'], f.get('href'))}
                             file_list[i2] = file_dict
