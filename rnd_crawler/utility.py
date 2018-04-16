@@ -229,7 +229,8 @@ def get_board_content(content_url, csv_info):
                     if 'onclick' != s and 'ajax' != s and 'javascript' != s:
                         file_list = soup.select(s)
                         for i2, f in enumerate(file_list):
-                            file_list[i2] = valid_a_href(csv_info['content_File_url'], f.get('href'))
+                            file_dict = {'file_name': f.text.strip(), 'url': valid_a_href(csv_info['content_File_url'], f.get('href'))}
+                            file_list[i2] = file_dict
                     else:
                         file_list = []
                     html = file_list
