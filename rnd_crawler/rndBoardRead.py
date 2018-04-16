@@ -115,7 +115,7 @@ def print_test(row_num):
 
 
 # print_list()  # 인자로 rowNum을 주면 제외하고 크롤링
-print_test(114)
+print_test(90)
 
 print('예외발생 : ',util.get_except_list())
 print('++++++++++++++++++++++ 조회 완료 ++++++++++++++++++++++')
