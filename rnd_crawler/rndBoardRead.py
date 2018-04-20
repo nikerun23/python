@@ -1,13 +1,15 @@
 import requests
 from bs4 import BeautifulSoup as bs
 import rnd_crawler.utility as util
+import logging
+import logging.handlers
 
 
 def print_RnD(csv_info, yesterday_list, keyword_list):
-    print(csv_info['부처'], '---', csv_info['기관'], '---------------------------------------')
-    print(csv_info['URL'])
+    logger.debug('%s --- %s ---------------------------------------' % (csv_info['부처'], csv_info['기관']))
+    logger.debug(csv_info['URL'])
     if 'X' == csv_info['Crawler']:  # Crawler
-        print('X --- 크롤링 제외 ------------------------')
+        logger.debug('X --- 크롤링 제외 ------------------------')
         return None
     url = csv_info['URL']
     select_tr = csv_info['TR']
@@ -29,11 +31,11 @@ def print_RnD(csv_info, yesterday_list, keyword_list):
             else:
                 req = requests.get(url)
         except ConnectionRefusedError as e:
-            print(e)
-            print('########## req.get ConnectionRefusedError 예외발생 !!')
+            logger.error(e)
+            logger.error('########## req.get ConnectionRefusedError 예외발생 !!')
         except ConnectionError as e:
-            print(e)
-            print('########## req.get ConnectionError 예외발생 !!')
+            logger.error(e)
+            logger.error('########## req.get ConnectionError 예외발생 !!')
         else:
             # etc_1 열
             if 'utf-8' == etc_1_str:
@@ -44,7 +46,7 @@ def print_RnD(csv_info, yesterday_list, keyword_list):
 
     # print(html)
     if '' == html:
-        print('########## HTML에 정보가 없습니다 !!')
+        logger.error('########## HTML에 정보가 없습니다 !!')
         return None
 
     soup = bs(html, 'lxml')
@@ -70,8 +72,8 @@ def print_RnD(csv_info, yesterday_list, keyword_list):
                     print('href 가 있습니다 =',title_url)
                     csv_info['content_WriteDate'] = board_date.strftime('%Y-%m-%d')
                     rnd_content = util.get_board_content(title_url, csv_info)
-                    print(rnd_content)
-                    print('============================================================')
+                    logger.debug(rnd_content)
+                    logger.debug('============================================================')
             # if 'onclick' in title_list.attrs:  # 제목 링크에 onclick 존재할 경우만
             #     onclick = title_list.attrs['onclick']
             #     print('onclick 가 있습니다 = ', title_list.attrs['onclick'])
@@ -83,10 +85,10 @@ def print_RnD(csv_info, yesterday_list, keyword_list):
 
             # util.write_board_selenium(rnd_content)
         except AttributeError as e:
-            print(e)
-            print('########## Attribute Error PASS !!')
+            logger.error(e)
+            logger.error('########## Attribute Error PASS !!')
             pass
-    print('-----------------------------------------------------------------------')
+    logger.debug('-----------------------------------------------------------------------')
 
 
 # +++++++++++ Main start +++++++++++++++++++++++++++++++++
@@ -94,18 +96,26 @@ def print_RnD(csv_info, yesterday_list, keyword_list):
 # main
 #
 if __name__ == '__main__':
+    logger = logging.getLogger('rndBoardRead')
+    logger.setLevel(logging.DEBUG)
+
+    streamHandler = logging.StreamHandler()
+    fileHandler = logging.FileHandler('./log/test.log')
+
+    logger.addHandler(streamHandler)
+    # logger.addHandler(fileHandler)
+
     # url_dict_list = util.csv_read_url('csv/url_list.csv')
     url_dict_list = util.csv_read_url('csv/url_list - google.csv')
     keyword_list = util.csv_read_keyword('csv/search_keyword.csv')
     yesterday_list = util.get_yesterday_list()
     # yesterday_list = [datetime.date(2018, 2, 27)]
     # yesterday_list = [datetime.date(2018, 3, 9), datetime.date(2018, 3, 10), datetime.date(2018, 3, 11)]
-    print(keyword_list)
-
+    logger.debug(keyword_list)
 
     def print_list(ignore=999):
         for index, info in enumerate(url_dict_list):
-            print('csv Row Num :',index + 2)
+            logger.debug('csv Row Num :',index + 2)
             if ignore == (index + 2):
                 continue
             print_RnD(info, yesterday_list, keyword_list)
@@ -118,8 +128,8 @@ if __name__ == '__main__':
 
 
     # print_list()  # 인자로 rowNum을 주면 제외하고 크롤링
-    print_test(114)
+    print_test(90)
 
-    print('예외발생 : ',util.get_except_list())
-    print('++++++++++++++++++++++ 조회 완료 ++++++++++++++++++++++')
+    logger.debug('예외발생 : %s' % util.get_except_list())
+    logger.debug('++++++++++++++++++++++ 조회 완료 ++++++++++++++++++++++')
 
