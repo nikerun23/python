@@ -90,33 +90,36 @@ def print_RnD(csv_info, yesterday_list, keyword_list):
 
 
 # +++++++++++ Main start +++++++++++++++++++++++++++++++++
-
-# url_dict_list = util.csv_read_url('csv/url_list.csv')
-url_dict_list = util.csv_read_url('csv/url_list - google.csv')
-keyword_list = util.csv_read_keyword('csv/search_keyword.csv')
-yesterday_list = util.get_yesterday_list()
-# yesterday_list = [datetime.date(2018, 2, 27)]
-# yesterday_list = [datetime.date(2018, 3, 9), datetime.date(2018, 3, 10), datetime.date(2018, 3, 11)]
-print(keyword_list)
-
-
-def print_list(ignore=999):
-    for index, info in enumerate(url_dict_list):
-        print('csv Row Num :',index + 2)
-        if ignore == (index + 2):
-            continue
-        print_RnD(info, yesterday_list, keyword_list)
+#
+# main
+#
+if __name__ == '__main__':
+    # url_dict_list = util.csv_read_url('csv/url_list.csv')
+    url_dict_list = util.csv_read_url('csv/url_list - google.csv')
+    keyword_list = util.csv_read_keyword('csv/search_keyword.csv')
+    yesterday_list = util.get_yesterday_list()
+    # yesterday_list = [datetime.date(2018, 2, 27)]
+    # yesterday_list = [datetime.date(2018, 3, 9), datetime.date(2018, 3, 10), datetime.date(2018, 3, 11)]
+    print(keyword_list)
 
 
-def print_test(row_num):
-    row_num = row_num - 2  # index 값 보정
-    # print(url_dict_list[row_num])
-    print_RnD(url_dict_list[row_num], yesterday_list, keyword_list)
+    def print_list(ignore=999):
+        for index, info in enumerate(url_dict_list):
+            print('csv Row Num :',index + 2)
+            if ignore == (index + 2):
+                continue
+            print_RnD(info, yesterday_list, keyword_list)
 
 
-# print_list()  # 인자로 rowNum을 주면 제외하고 크롤링
-print_test(113)
+    def print_test(row_num):
+        row_num = row_num - 2  # index 값 보정
+        # print(url_dict_list[row_num])
+        print_RnD(url_dict_list[row_num], yesterday_list, keyword_list)
 
-print('예외발생 : ',util.get_except_list())
-print('++++++++++++++++++++++ 조회 완료 ++++++++++++++++++++++')
+
+    # print_list()  # 인자로 rowNum을 주면 제외하고 크롤링
+    print_test(114)
+
+    print('예외발생 : ',util.get_except_list())
+    print('++++++++++++++++++++++ 조회 완료 ++++++++++++++++++++++')
 
