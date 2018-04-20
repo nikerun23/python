@@ -1,8 +1,9 @@
-# -*- coding: utf-8 -*-
+# -*- coding: UTF-8 -*-
 
 import datetime
 import csv
 from selenium import webdriver
+from selenium.common.exceptions import TimeoutException
 import time
 import re
 import requests
@@ -10,7 +11,11 @@ from bs4 import BeautifulSoup as bs, Comment
 import telegram
 from multiprocessing import Pool
 import cx_Oracle
+import os
+import sys
+from importlib import reload
 
+os.environ['NLS_LANG'] = '.UTF8'  # UnicodeEncodeError
 global except_list
 except_list = []
 
@@ -53,8 +58,8 @@ def valid_title(title_str):
     if title_str is None:
         return ''
     title_str = title_str.replace('새글', '').replace('New', '')\
-        .replace('[진행중]', '').replace('[입찰안내]', '').replace('[공고]', '').replace('[용역]', '')\
-        .replace('[입찰]', '')
+        .replace('[진행중]', '').replace('[입찰안내]', '').replace('[공고]', '').replace('[용역]', '') \
+        .replace('[입찰]', '').replace('제　목', '')
     title_str = title_str.strip()
     title_str = title_str.replace('  ', '').replace('\t', '').replace('\n', '')
     return title_str
@@ -123,9 +128,13 @@ def selenium_read_board(csv_info):
             driver.find_element_by_css_selector(css).click()
             time.sleep(5)
         html = driver.page_source
-    except Exception:
-        print('########## Selenium 작동이 중지 되었습니다')
-        except_list.append({csv_info['기관']: '########## Selenium 작동이 중지 되었습니다'})
+    except TimeoutException as e:
+        print('########## Selenium 작동이 중지 되었습니다 : %s' % e)
+        except_list.append({csv_info['기관']: '########## Selenium 작동이 중지 되었습니다 %s' % e})
+        html = ''
+    except Exception as e:
+        print('########## Selenium 작동이 중지 되었습니다 : %s' % e)
+        except_list.append({csv_info['기관']: '########## Selenium 작동이 중지 되었습니다 %s' % e})
         html = ''
     finally:
         driver.quit()
@@ -175,13 +184,13 @@ def valid_a_href(url, href):
 # """" 공고 게시판 내용을 가져옵니다 Dict 타입으로 반환 """
 def get_board_content(content_url, csv_info):
     select_list = [
-        csv_info['SEED_ID'],
         csv_info['content_Title'],
         csv_info['content_WriteDate'],
         csv_info['content_StartDate'],
         csv_info['content_EndDate'],
         csv_info['content_Body'],
-        csv_info['content_Files']
+        csv_info['content_Files'],
+        csv_info['SEED_ID']
     ]
     if 'verify=False' == csv_info['etc_2']:
         req = requests.get(content_url, verify=False)
