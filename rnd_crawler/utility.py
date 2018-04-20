@@ -9,6 +9,7 @@ import requests
 from bs4 import BeautifulSoup as bs, Comment
 import telegram
 from multiprocessing import Pool
+import cx_Oracle
 
 global except_list
 except_list = []
@@ -164,9 +165,9 @@ def modify_date(date_str, date_fm):
         return result
 
 
+# """ URL을 수정하고 호스트와 합쳐 반환합니다 """
 def valid_a_href(url, href):
     href = href.replace(' ', '%20').replace('./', '/').replace('../', '/').replace('&amp;', '&')
-    # domain_name = url[:url.find('.kr') + 3].replace(' ', '')
     result = url + href
     return result
 
@@ -174,6 +175,7 @@ def valid_a_href(url, href):
 # """" 공고 게시판 내용을 가져옵니다 Dict 타입으로 반환 """
 def get_board_content(content_url, csv_info):
     select_list = [
+        csv_info['SEED_ID'],
         csv_info['content_Title'],
         csv_info['content_WriteDate'],
         csv_info['content_StartDate'],
@@ -247,7 +249,8 @@ def get_board_content(content_url, csv_info):
             result_list.append(html)
 
     # print(result_list)
-    content = {'title': valid_title(result_list[0]),
+    content = {'seed_id': csv_info['SEED_ID'],
+               'title': valid_title(result_list[0]),
                'url': content_url,
                'dept_cd': csv_info['부처'],
                'wc_company_name': csv_info['기관'],
