@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup as bs
 import rnd_crawler.utility as util
 import logging
 import logging.handlers
+from rnd_crawler import ColoredFormatter
 
 
 def print_RnD(csv_info, yesterday_list, keyword_list):
@@ -61,19 +62,20 @@ def print_RnD(csv_info, yesterday_list, keyword_list):
             date_list = tr.select_one(select_date)
             board_date = util.valid_date(date_list.text, date_format)  # datetime객체로 반환
             # 전일 공고만 출력
-            # if util.yesterday_check(yesterday_list, board_date):
-            #     if util.get_keyword_title(title, keyword_list):
-            #         print(board_no, title, board_date)  # 결과 데이터 라인
+            if util.yesterday_check(yesterday_list, board_date):
+                if util.get_keyword_title(title, keyword_list):
+                    logger.info("%s %s %s" % (board_no, title, board_date))  # 결과 데이터 라인
+
             # util.get_board_content_selenium(title,url,select_title)
 
-            if 'href' in title_list.attrs and board_date is not None:  # 제목 링크에 href가 존재할 경우만
-                if 'http' in content_url[:7]:
-                    title_url = util.valid_a_href(content_url,title_list.get('href'))
-                    print('href 가 있습니다 =',title_url)
-                    csv_info['content_WriteDate'] = board_date.strftime('%Y-%m-%d')
-                    rnd_content = util.get_board_content(title_url, csv_info)
-                    logger.debug(rnd_content)
-                    logger.debug('============================================================')
+            # if 'href' in title_list.attrs and board_date is not None:  # 제목 링크에 href가 존재할 경우만
+            #     if 'http' in content_url[:7]:
+            #         title_url = util.valid_a_href(content_url,title_list.get('href'))
+            #         print('href 가 있습니다 =',title_url)
+            #         csv_info['content_WriteDate'] = board_date.strftime('%Y-%m-%d')
+            #         rnd_content = util.get_board_content(title_url, csv_info)
+            #         logger.debug(rnd_content)
+            #         logger.debug('============================================================')
             # if 'onclick' in title_list.attrs:  # 제목 링크에 onclick 존재할 경우만
             #     onclick = title_list.attrs['onclick']
             #     print('onclick 가 있습니다 = ', title_list.attrs['onclick'])
@@ -102,8 +104,13 @@ if __name__ == '__main__':
     streamHandler = logging.StreamHandler()
     fileHandler = logging.FileHandler('./log/test.log')
 
+    log_format = '[%(asctime)s]:%(levelname)-7s:%(message)s'
+    time_format = '%H:%M:%S'
+    formatter = ColoredFormatter.ColoredFormatter(log_format, datefmt=time_format)
+    streamHandler.setFormatter(formatter)
+
     logger.addHandler(streamHandler)
-    # logger.addHandler(fileHandler)
+    logger.addHandler(fileHandler)
 
     # url_dict_list = util.csv_read_url('csv/url_list.csv')
     url_dict_list = util.csv_read_url('csv/url_list - google.csv')
@@ -115,7 +122,7 @@ if __name__ == '__main__':
 
     def print_list(ignore=999):
         for index, info in enumerate(url_dict_list):
-            logger.debug('csv Row Num :',index + 2)
+            logger.debug('csv Row Num : %s' % (index + 2))
             if ignore == (index + 2):
                 continue
             print_RnD(info, yesterday_list, keyword_list)
@@ -127,8 +134,8 @@ if __name__ == '__main__':
         print_RnD(url_dict_list[row_num], yesterday_list, keyword_list)
 
 
-    # print_list()  # 인자로 rowNum을 주면 제외하고 크롤링
-    print_test(90)
+    print_list()  # 인자로 rowNum을 주면 제외하고 크롤링
+    # print_test(90)
 
     logger.debug('예외발생 : %s' % util.get_except_list())
     logger.debug('++++++++++++++++++++++ 조회 완료 ++++++++++++++++++++++')
