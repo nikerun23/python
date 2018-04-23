@@ -424,3 +424,73 @@ def valid_start_end_date(date_type, date_str, content_DateFormat):
     print('result :',valid_date(date_str, None).strftime('%Y-%m-%d'))
     return valid_date(date_str, None).strftime('%Y-%m-%d')
 
+
+def get_file_download(url):
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36'
+    }
+
+    print('url :', url)
+    response = requests.get(url, stream=True, headers=headers)
+    filename = re.findall("[^/]*$", url)[0]
+    print('filename :', filename)
+
+
+def insert_table_WC_CONTENT(rnd_content_list):
+    cursor = conn.cursor()
+
+    insert_items = []
+    for rnd_content in rnd_content_list:
+        # UID를 시퀀스로 조회한다
+        uid_query = "SELECT WC_CONTENT_PYTHON_SEQ.NEXTVAL FROM DUAL"
+        cursor.execute(uid_query)
+
+        WA_UID = cursor.fetchone()[0]
+        WA_BBS_UID = rnd_content['seed_id']  # 마스터UID
+        WC_TITLE = rnd_content['title']  # 제목
+        WC_WRITER = ''  # 작성자
+        WC_URL = rnd_content['url']  # URL
+        WC_DT = '' if 'NoData' == rnd_content['write_date'] else rnd_content['write_date']  # 고유작성일 (공고등록일)
+        # WC_COLL_DT = 'SYSDATE'  # 수집일자
+        WC_P_CONTENT = rnd_content['body']  # 내용
+        WC_KEYWORD_CODE = '402001'  # 마스터분류코드 (공고 402001)
+        WC_COMPANY_NAME = ''  # 공고기관명
+        COL3 = '' if 'NoData' == rnd_content['start_date'] else rnd_content['start_date']  # 공고일(접수 시작일)
+        COL4 = '' if 'NoData' == rnd_content['end_date'] else rnd_content['end_date']  # 접수마감일
+        TEXT_UID = WA_UID  # TEXT_UID
+        WA_DB_VIEW = 'Y'  # Y
+        WC_MEM_ID = '파이썬'  # 파이썬
+
+        # WA_BBS_UID = '20001'  # 마스터UID
+        # WC_TITLE = '한글 TEST'  # 제목
+        # WC_WRITER = '이현근'  # 작성자
+        # WC_URL = 'http://www.naver.com'  # URL
+        # WC_DT = '2018-07-07'  # 고유작성일
+        # WC_COLL_DT = 'SYSDATE'  # 수집일자
+        # WC_P_CONTENT = '내용'  # 내용
+        # WC_KEYWORD_CODE = '402001'  # 마스터분류코드 (공고 402001)
+        # WC_COMPANY_NAME = ''  # 공고기관명
+        # COL3 = ''  # 공고일
+        # COL4 = ''  # 접수마감일
+        # TEXT_UID = WA_UID  # TEXT_UID
+        # WA_DB_VIEW = 'Y'  #
+        # WC_MEM_ID = '파이썬'  #
+
+        insert_items.append((WA_BBS_UID, WA_UID, WC_TITLE, WC_WRITER, WC_URL, WC_DT, WC_P_CONTENT, WC_KEYWORD_CODE, WC_COMPANY_NAME, COL3, COL4, TEXT_UID, WA_DB_VIEW, WC_MEM_ID))
+
+    # print(insert_items)
+    try:
+        insert_query = "insert into WC_CONTENT " \
+                       "(WA_BBS_UID, WA_UID, WC_TITLE, WC_WRITER, WC_URL, WC_DT, WC_COLL_DT, WC_P_CONTENT, WC_KEYWORD_CODE, WC_COMPANY_NAME, COL3, COL4, TEXT_UID, WA_DB_VIEW, WC_MEM_ID) " \
+                       "values (:1,:2,:3,:4,:5,TO_DATE(:6,'YYYY-MM-DD'),SYSDATE,:7,:8,:9,TO_DATE(:10,'YYYY-MM-DD'),TO_DATE(:11,'YYYY-MM-DD'),:12,:13,:14)"
+        cursor.bindarraysize = len(insert_items)
+        cursor.executemany(insert_query, insert_items)
+    except:
+        raise Exception('# Query failed : %s' % insert_query)
+    else:
+        print('%s개의 공고가 성공적으로 INSERT 되었습니다.' % len(insert_items))
+        conn.commit()
+        print('commit()')
+
+    conn.close()
+
