@@ -14,16 +14,26 @@ import cx_Oracle
 import os
 import sys
 from importlib import reload
+import logging
 
 os.environ['NLS_LANG'] = '.UTF8'  # UnicodeEncodeError
 global except_list
 except_list = []
 
+logger = logging.getLogger('utility')
+logger.setLevel(logging.DEBUG)
+
+streamHandler = logging.StreamHandler()
+fileHandler = logging.FileHandler('./log/test.log')
+
+logger.addHandler(streamHandler)
+# logger.addHandler(fileHandler)
+
 
 # """ 날짜를 검증합니다 """
 def valid_date(date_str, date_fm):
     if date_str is None or re.match('(.*)[0-9]+', date_str, re.DOTALL) is None:  # 숫자가 없으면 return None
-        print('########## 날짜에 숫자가 없습니다 :', date_str)
+        logger.error('########## 날짜에 숫자가 없습니다 :', date_str)
         return None
     if date_fm in ('DD/nYY.MM', '|YYYY-MM-DD', '작성일YYYY-MM-DD'):  # 불규칙한 날짜를 보완 (과학기술정보통신부, 국가수리과학연구소)
         date_str = modify_date(date_str, date_fm)
@@ -44,7 +54,7 @@ def valid_date(date_str, date_fm):
     try:
         date_time_str = datetime.datetime.strptime(date_str, '%Y-%m-%d')
     except Exception:
-        print('########## 날짜 양식에 문제가 있습니다 :\n', date_str)
+        logger.error('########## 날짜 양식에 문제가 있습니다 :\n', date_str)
         except_list.append({date_str: '########## 날짜 양식에 문제가 있습니다'})
         result = None
     else:
@@ -76,9 +86,9 @@ def get_yesterday_list():
         yesterday_list.append(yesterday - datetime.timedelta(days=1))
         yesterday_list.append(yesterday - datetime.timedelta(days=2))
 
-    print('전일 :', yesterday, day_of_week[yesterday.weekday()])
-    print('크롤링 날짜 :', yesterday_list)
-    print('-----------------------------------------------------------------------------------')
+    logger.debug('전일 :', yesterday, day_of_week[yesterday.weekday()])
+    logger.debug('크롤링 날짜 :', yesterday_list)
+    logger.debug('-----------------------------------------------------------------------------------')
     return yesterday_list
 
 
@@ -99,7 +109,7 @@ def csv_read_url(src):
     try:
         csv_reader = csv.DictReader(open(src, encoding='UTF8'))
     except FileNotFoundError:
-        print('########## 파일을 찾을 수 없습니다 :', src)
+        logger.error('########## 파일을 찾을 수 없습니다 :', src)
     else:
         url_field_names = csv_reader.fieldnames
         for row in csv_reader.reader:
@@ -129,11 +139,11 @@ def selenium_read_board(csv_info):
             time.sleep(5)
         html = driver.page_source
     except TimeoutException as e:
-        print('########## Selenium 작동이 중지 되었습니다 : %s' % e)
+        logger.error('########## Selenium 작동이 중지 되었습니다 : %s' % e)
         except_list.append({csv_info['기관']: '########## Selenium 작동이 중지 되었습니다 %s' % e})
         html = ''
     except Exception as e:
-        print('########## Selenium 작동이 중지 되었습니다 : %s' % e)
+        logger.error('########## Selenium 작동이 중지 되었습니다 : %s' % e)
         except_list.append({csv_info['기관']: '########## Selenium 작동이 중지 되었습니다 %s' % e})
         html = ''
     finally:
@@ -166,7 +176,7 @@ def modify_date(date_str, date_fm):
             result = ''
 
     except Exception:
-        print('########## 날짜 수정에 실패 하였습니다 :', result)
+        logger.error('########## 날짜 수정에 실패 하였습니다 :', result)
         except_list.append({result: '########## 날짜 수정에 실패 하였습니다'})
         result = ''
     # print('result :', result)
@@ -235,7 +245,7 @@ def get_board_content(content_url, csv_info):
                         # html = soup.select_one(s).get_text()  # (str)글내용
                         html = html.replace('\n','').replace('\r','').replace('\t','').replace('\xad','').replace('\xa0','').replace('\u200b','').replace("\'",'`')  # 유니코드 제거
                         if 'src="/' in html:
-                            print('+++++++++ src="/ 수정 되었습니다 +++++++++')
+                            logger.debug('+++++++++ src="/ 수정 되었습니다 +++++++++')
                             src = 'src="' + csv_info['content_File_url'] + '/'
                             html = html.replace('src="/', src)
                 # content_Files
@@ -251,8 +261,8 @@ def get_board_content(content_url, csv_info):
             else:
                 html = 'NoData'
         except Exception as e:
-            print(e)
-            print('########## get_board_content 예외발생 !! : ',index)
+            logger.error(e)
+            logger.error('########## get_board_content 예외발생 !! : ',index)
             html = 'except NoData'
         finally:
             result_list.append(html)
@@ -287,7 +297,7 @@ def get_headless(csv_info):
     # User Agent 결과값 가져오기
     # User Agent 가 잘못 설정되면 .xpdopen 요소를 셀렉트 할 수 없다.
     my_user_agent = driver.find_element_by_css_selector('.xpdopen').text
-    print(my_user_agent)
+    logger.debug(my_user_agent)
     # 브라우저 및 드라이버 종료
     driver.quit()
 
@@ -368,7 +378,7 @@ def csv_read_keyword(src):
                 if '' != row[index]:
                     keyword_list[field_name].append(row[index])
     except FileNotFoundError:
-        print('########## 파일을 찾을 수 없습니다 :', 'search_keyword.csv')
+        logger.error('########## 파일을 찾을 수 없습니다 :', 'search_keyword.csv')
     return keyword_list
 
 
@@ -395,7 +405,7 @@ def get_board_content_selenium(title, url, select_title):
     for tr in title_list:
         # if tr.get_attribute('onclick') == onclick:
         if title in tr.text:
-            print(tr.text)
+            logger.debug(tr.text)
             # title.click()
             # time.sleep(2)
 
@@ -408,7 +418,7 @@ def get_except_list():
 def valid_start_end_date(date_type, date_str, content_DateFormat):
     # date_str = date_str.replace('\n','')
     if re.match('(.*)[0-9]+', date_str, re.DOTALL) is None:  # 숫자가 없으면 return ''
-        print('########## 숫자가 없습니다 :',date_str)
+        logger.error('########## 숫자가 없습니다 :',date_str)
         return ''
     date_str = date_str.strip().replace('.','-').replace('/','-')
     date_str = re.sub('[^0-9~/시:\s-]', '', date_str)  # 2017-12-29~2018-01-03
@@ -420,8 +430,8 @@ def valid_start_end_date(date_type, date_str, content_DateFormat):
             date_str = date_str[date_str.find('~')+1:]
             if year_str not in date_str:  # 마감일에 연도 없을 경우 시작일의 연도를 붙여준다
                 date_str = year_str + '-' + date_str.strip()
-    print('date_str :',date_str, '시작일' if date_type == 2 else '마감일')
-    print('result :',valid_date(date_str, None).strftime('%Y-%m-%d'))
+    logger.debug('date_str :',date_str, '시작일' if date_type == 2 else '마감일')
+    logger.debug('result :',valid_date(date_str, None).strftime('%Y-%m-%d'))
     return valid_date(date_str, None).strftime('%Y-%m-%d')
 
 
@@ -430,10 +440,10 @@ def get_file_download(url):
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36'
     }
 
-    print('url :', url)
+    logger.debug('url :', url)
     response = requests.get(url, stream=True, headers=headers)
     filename = re.findall("[^/]*$", url)[0]
-    print('filename :', filename)
+    logger.debug('filename :', filename)
 
 
 def insert_table_WC_CONTENT(rnd_content_list):
@@ -488,9 +498,9 @@ def insert_table_WC_CONTENT(rnd_content_list):
     except:
         raise Exception('# Query failed : %s' % insert_query)
     else:
-        print('%s개의 공고가 성공적으로 INSERT 되었습니다.' % len(insert_items))
+        logger.debug('%s개의 공고가 성공적으로 INSERT 되었습니다.' % len(insert_items))
         conn.commit()
-        print('commit()')
+        logger.debug('commit()')
 
     conn.close()
 
