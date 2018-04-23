@@ -13,14 +13,14 @@ import unicodedata
 import sys
 import chardet
 
-
+sys.setdefaultencoding('utf8')
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36'
 }
 
 # url = 'http://www.mof.go.kr/jfile/readDownloadFile.do?fileId=MOF_ARTICLE_19574&fileSeq=1'
-# url = 'https://www.kitech.re.kr/upload_files/download.php?filepath=business/20180417093400.hwp&filename=%BC%AD%BD%C4+%C1%A65%C8%A3_IT%C0%B6%C7%D5%B8%C2%C3%E3+%BB%EA%BE%F7%BF%EB%BC%B6%C0%AF+%BB%FD%BB%EA%BF%AA%B7%AE%B0%AD%C8%AD%BB%E7%BE%F7+%C1%F6%BF%F8%BD%C5%C3%BB%BC%AD_%C7%D1%B1%B9%BC%B6%C0%AF%BC%F6%C3%E2%C0%D4%C1%B6%C7%D5.hwp'
-url = 'http://www.molit.go.kr/LCMS/DWN.jsp?fold=tender&fileName=%EA%B3%BC%EC%97%85%EC%A7%80%EC%8B%9C%EC%84%9C%28%EC%84%B1%EC%9E%A5%EC%B4%89%EC%A7%84%EC%A7%80%EC%97%AD_%EC%9E%AC%EC%A7%80%EC%A0%95_%EB%B0%8F_%EB%82%99%ED%9B%84%EC%A7%80%EC%97%AD_%EC%A7%80%EC%9B%90%EC%B2%B4%EA%B3%84_%EA%B0%9C%EC%84%A0%EB%B0%A9%EC%95%88_%EB%A7%88%EB%A0%A8_%EC%97%B0%EA%B5%AC%29%281%29.hwp'
+url = 'https://www.kitech.re.kr/upload_files/download.php?filepath=business/20180417093400.hwp&filename=%BC%AD%BD%C4+%C1%A65%C8%A3_IT%C0%B6%C7%D5%B8%C2%C3%E3+%BB%EA%BE%F7%BF%EB%BC%B6%C0%AF+%BB%FD%BB%EA%BF%AA%B7%AE%B0%AD%C8%AD%BB%E7%BE%F7+%C1%F6%BF%F8%BD%C5%C3%BB%BC%AD_%C7%D1%B1%B9%BC%B6%C0%AF%BC%F6%C3%E2%C0%D4%C1%B6%C7%D5.hwp'
+# url = 'http://www.molit.go.kr/LCMS/DWN.jsp?fold=tender&fileName=%EA%B3%BC%EC%97%85%EC%A7%80%EC%8B%9C%EC%84%9C%28%EC%84%B1%EC%9E%A5%EC%B4%89%EC%A7%84%EC%A7%80%EC%97%AD_%EC%9E%AC%EC%A7%80%EC%A0%95_%EB%B0%8F_%EB%82%99%ED%9B%84%EC%A7%80%EC%97%AD_%EC%A7%80%EC%9B%90%EC%B2%B4%EA%B3%84_%EA%B0%9C%EC%84%A0%EB%B0%A9%EC%95%88_%EB%A7%88%EB%A0%A8_%EC%97%B0%EA%B5%AC%29%281%29.hwp'
 # url = 'http://www.msip.go.kr/cms/www/news/notice/__icsFiles/afieldfile/2018/04/13/상품판매형 방송채널사용사업 재승인 관련 시청자 의견 반영 여부 및 심사결과 공표.hwp'
 
 response = urllib.request.urlopen(url)
