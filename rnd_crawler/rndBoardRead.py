@@ -1,17 +1,20 @@
+# -*- coding: UTF-8 -*-
+
 import requests
 from bs4 import BeautifulSoup as bs
 import rnd_crawler.utility as util
 import logging
 import logging.handlers
 from rnd_crawler import ColoredFormatter
-
+import http
 
 def print_RnD(csv_info, yesterday_list, keyword_list):
-    logger.debug('%s --- %s ---------------------------------------' % (csv_info['부처'], csv_info['기관']))
+    logger.debug('%s - %s --- %s ---------------------------------------' % (csv_info['SEED_ID'], csv_info['부처'], csv_info['기관']))
     logger.debug(csv_info['URL'])
     if 'X' == csv_info['Crawler']:  # Crawler
         logger.debug('X --- 크롤링 제외 ------------------------')
         return None
+    seed_id = csv_info['SEED_ID']
     url = csv_info['URL']
     select_tr = csv_info['TR']
     select_title = csv_info['Title']
@@ -23,7 +26,8 @@ def print_RnD(csv_info, yesterday_list, keyword_list):
     html = ''
 
     if 'Ajax' == etc_1_str:  # Selenium
-        html = util.selenium_read_board(csv_info)
+        # html = util.selenium_read_board(csv_info)
+        html = util.sselenium_headles_read_board(csv_info)
     else:
         try:
             # etc_2 열
@@ -34,6 +38,9 @@ def print_RnD(csv_info, yesterday_list, keyword_list):
         except ConnectionRefusedError as e:
             logger.error(e)
             logger.error('########## req.get ConnectionRefusedError 예외발생 !!')
+        except http.client.RemoteDisconnected as e:
+            logger.error(e)
+            logger.error('########## req.get RemoteDisconnected 예외발생 !!')
         except ConnectionError as e:
             logger.error(e)
             logger.error('########## req.get ConnectionError 예외발생 !!')
@@ -58,13 +65,12 @@ def print_RnD(csv_info, yesterday_list, keyword_list):
         try:
             title_list = tr.select_one(select_title)
             title = util.valid_title(title_list.text)
-            board_no = ''
             date_list = tr.select_one(select_date)
             board_date = util.valid_date(date_list.text, date_format)  # datetime객체로 반환
             # 전일 공고만 출력
-            if util.yesterday_check(yesterday_list, board_date):
-                if util.get_keyword_title(title, keyword_list):
-                    logger.info("%s %s %s" % (board_no, title, board_date))  # 결과 데이터 라인
+            # if util.yesterday_check(yesterday_list, board_date):
+            if util.get_keyword_title(title, keyword_list):
+                logger.info("%s %s" % (title.replace(u'\xa0', u' '), board_date))  # 결과 데이터 라인
 
             # util.get_board_content_selenium(title,url,select_title)
 
@@ -134,8 +140,8 @@ if __name__ == '__main__':
         print_RnD(url_dict_list[row_num], yesterday_list, keyword_list)
 
 
-    print_list()  # 인자로 rowNum을 주면 제외하고 크롤링
-    # print_test(90)
+    # print_list()  # 인자로 rowNum을 주면 제외하고 크롤링
+    print_test(3)
 
     logger.debug('예외발생 : %s' % util.get_except_list())
     logger.debug('++++++++++++++++++++++ 조회 완료 ++++++++++++++++++++++')
