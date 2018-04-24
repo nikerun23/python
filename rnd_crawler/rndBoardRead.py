@@ -27,7 +27,7 @@ def print_RnD(csv_info, yesterday_list, keyword_list):
 
     if 'Ajax' == etc_1_str:  # Selenium
         # html = util.selenium_read_board(csv_info)
-        html = util.sselenium_headles_read_board(csv_info)
+        html = util.sselenium_headless_read_board(csv_info)
     else:
         try:
             # etc_2 열
