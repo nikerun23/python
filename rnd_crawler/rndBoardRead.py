@@ -7,6 +7,7 @@ import logging
 import logging.handlers
 from rnd_crawler import ColoredFormatter
 import http
+import datetime
 
 def print_RnD(csv_info, yesterday_list, keyword_list):
     logger.debug('%s - %s --- %s ---------------------------------------' % (csv_info['SEED_ID'], csv_info['부처'], csv_info['기관']))
@@ -44,6 +45,9 @@ def print_RnD(csv_info, yesterday_list, keyword_list):
         except ConnectionError as e:
             logger.error(e)
             logger.error('########## req.get ConnectionError 예외발생 !!')
+        except Exception as e:
+            logger.error(e)
+            logger.error('########## req.get Exception 예외발생 !!')
         else:
             # etc_1 열
             if 'utf-8' == etc_1_str:
@@ -51,7 +55,6 @@ def print_RnD(csv_info, yesterday_list, keyword_list):
             elif 'euc-kr' == etc_1_str:
                 req.encoding = 'euc-kr'
             html = req.text
-
     # print(html)
     if '' == html:
         logger.error('########## HTML에 정보가 없습니다 !!')
@@ -61,6 +64,7 @@ def print_RnD(csv_info, yesterday_list, keyword_list):
     board_list = soup.select(select_tr)
     # print(board_list)
 
+    crawlwe_result = False
     for tr in board_list:
         try:
             title_list = tr.select_one(select_title)
@@ -68,9 +72,11 @@ def print_RnD(csv_info, yesterday_list, keyword_list):
             date_list = tr.select_one(select_date)
             board_date = util.valid_date(date_list.text, date_format)  # datetime객체로 반환
             # 전일 공고만 출력
-            # if util.yesterday_check(yesterday_list, board_date):
-            if util.get_keyword_title(title, keyword_list):
-                logger.info("%s %s" % (title.replace(u'\xa0', u' '), board_date))  # 결과 데이터 라인
+            if util.yesterday_check(yesterday_list, board_date):
+                if util.get_keyword_title(title, keyword_list):
+                    print("%s %s" % (title, board_date))  # 결과 데이터 라인
+                    # logger.info("%s %s" % (title.replace('\xad','').replace('\xa0','').replace('\u200b','').replace('\u2024',''), board_date))  # 결과 데이터 라인
+                    # logger.info("%s %s" % (title, board_date))  # 결과 데이터 라인
 
             # util.get_board_content_selenium(title,url,select_title)
 
@@ -88,20 +94,19 @@ def print_RnD(csv_info, yesterday_list, keyword_list):
             #     title_href = onclick[onclick.find("'")+1:onclick.rfind("'")]
             #     print(content_url+title_href)
             #
-            # print(board_no, title, board_date, '\n',content_url+title_href)
-
-
-            # util.write_board_selenium(rnd_content)
         except AttributeError as e:
             logger.error(e)
             logger.error('########## Attribute Error PASS !!')
             pass
+        else:
+            crawlwe_result = True
+    if crawlwe_result:
+        logger.debug('seed_id: %s 크롤링에 실패하였습니다' % seed_id)
     logger.debug('-----------------------------------------------------------------------')
+    logger.debug('%s -----------------------------------------------------------------------' % crawlwe_result)
 
 
 # +++++++++++ Main start +++++++++++++++++++++++++++++++++
-#
-# main
 #
 if __name__ == '__main__':
     logger = logging.getLogger('rndBoardRead')
@@ -110,39 +115,40 @@ if __name__ == '__main__':
     streamHandler = logging.StreamHandler()
     fileHandler = logging.FileHandler('./log/test.log')
 
-    log_format = '[%(asctime)s]:%(levelname)-7s:%(message)s'
-    time_format = '%H:%M:%S'
-    formatter = ColoredFormatter.ColoredFormatter(log_format, datefmt=time_format)
-    streamHandler.setFormatter(formatter)
+    # log_format = '[%(asctime)s]:%(levelname)-7s:%(message)s'
+    # time_format = '%H:%M:%S'
+    # formatter = ColoredFormatter.ColoredFormatter(log_format, datefmt=time_format)
+    # streamHandler.setFormatter(formatter)
 
     logger.addHandler(streamHandler)
-    logger.addHandler(fileHandler)
+    # logger.addHandler(fileHandler)
 
-    # url_dict_list = util.csv_read_url('csv/url_list.csv')
-    url_dict_list = util.csv_read_url('csv/url_list - google.csv')
-    keyword_list = util.csv_read_keyword('csv/search_keyword.csv')
-    yesterday_list = util.get_yesterday_list()
-    # yesterday_list = [datetime.date(2018, 2, 27)]
-    # yesterday_list = [datetime.date(2018, 3, 9), datetime.date(2018, 3, 10), datetime.date(2018, 3, 11)]
-    logger.debug(keyword_list)
+    try:
+        url_dict_list = util.csv_read_url('csv/url_list - google.csv')
+        keyword_list = util.csv_read_keyword('csv/search_keyword.csv')
+        # yesterday_list = util.get_yesterday_list()
+        yesterday_list = [datetime.date(2018, 4, 24),datetime.date(2018, 4, 25)]
+        # yesterday_list = [datetime.date(2018, 3, 9), datetime.date(2018, 3, 10), datetime.date(2018, 3, 11)]
+        logger.debug(keyword_list)
 
-    def print_list(ignore=999):
-        for index, info in enumerate(url_dict_list):
-            logger.debug('csv Row Num : %s' % (index + 2))
-            if ignore == (index + 2):
-                continue
-            print_RnD(info, yesterday_list, keyword_list)
-
-
-    def print_test(row_num):
-        row_num = row_num - 2  # index 값 보정
-        # print(url_dict_list[row_num])
-        print_RnD(url_dict_list[row_num], yesterday_list, keyword_list)
+        def print_list(ignore=999):
+            for index, info in enumerate(url_dict_list):
+                logger.debug('csv Row Num : %s' % (index + 2))
+                if ignore == (index + 2):
+                    continue
+                print_RnD(info, yesterday_list, keyword_list)
 
 
-    # print_list()  # 인자로 rowNum을 주면 제외하고 크롤링
-    print_test(3)
+        def print_test(row_num):
+            row_num = row_num - 2  # index 값 보정
+            print_RnD(url_dict_list[row_num], yesterday_list, keyword_list)
 
+        # print_list()  # 인자로 rowNum을 주면 제외하고 크롤링
+        print_test(96)
+    except Exception as e:
+        print('==========================================================')
+        print(e)
+        print('==========================================================')
     logger.debug('예외발생 : %s' % util.get_except_list())
     logger.debug('++++++++++++++++++++++ 조회 완료 ++++++++++++++++++++++')
 
