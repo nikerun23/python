@@ -67,7 +67,7 @@ def valid_title(title_str):
         return ''
     title_str = title_str.replace('새글', '').replace('New', '')\
         .replace('[진행중]', '').replace('[입찰안내]', '').replace('[공고]', '').replace('[용역]', '') \
-        .replace('[입찰]', '').replace('제　목', '')
+        .replace('[입찰]', '').replace('제　목', '').replace('새 글', '')
     title_str = title_str.strip()
     title_str = title_str.replace('  ', '').replace('\t', '').replace('\n', '')
     return title_str
@@ -446,15 +446,18 @@ def valid_start_end_date(date_type, date_str, content_DateFormat):
     return valid_date(date_str, None).strftime('%Y-%m-%d')
 
 
-def get_file_download(url):
+def get_file_download(files):
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36'
     }
 
-    logger.debug('url : %s' % url)
-    response = requests.get(url, stream=True, headers=headers)
-    filename = re.findall("[^/]*$", url)[0]
-    logger.debug('filename : %s' % filename)
+    for file in files:
+        file_name = file['file_name']
+        url = file['url']
+        logger.debug('url : %s' % url)
+        response = requests.get(url, stream=True, headers=headers)
+        filename = re.findall("[^/]*$", url)[0]
+        logger.debug('filename : %s' % filename)
 
 
 def insert_table_WC_CONTENT(rnd_content_list, db_info):
@@ -526,6 +529,54 @@ def insert_table_WC_CONTENT(rnd_content_list, db_info):
             conn.commit()
             logger.debug('commit()')
 
+    insert_table_WC_FILE(db_info)
+
+    cursor.close()
+    conn.close()
+
+def insert_table_WC_FILE(file_list, db_info):
+    print('=== insert_table_WC_FILE ==========================================')
+    print(file_list)
+    conn = cx_Oracle.connect(db_info['ID'], db_info['PWD'], db_info['IP'] + ':' + db_info['PORT'] + '/' + db_info['SID'])
+    cursor = conn.cursor()
+
+    insert_items = []
+    for file in file_list:
+        # UID를 시퀀스로 조회한다
+        UID_QUERY = "SELECT WC_FILE_PYTHON_SEQ.NEXTVAL FROM DUAL"
+        cursor.execute(UID_QUERY)
+
+        WF_UID = cursor.fetchone()[0]
+        WA_BBS_PHY_NUM = 10000  # WC_CONTENT 테이블의 WA_UID 컬럼과 동일
+        WF_BBS_PHY_TYPE = 1  # 타입 - 1
+        WF_FILE_NUM = 1  # 파일순서
+        WF_FILE_PATH = ''  # 난수의 파일명
+        WF_FILE_DIRE = 'upload/python'  # 저장된 경로+파일명 upload/boardun/931565f7-74c7-4efb-83e3-eafe832504cb(WF_FILE_PATH값과동일)
+        WA_BBS_UID = 999  # 999 Master코드
+        WF_FILE_NAME = file['file_name']  # 원본 파일명 (3.+과업설명서.hwp)
+        TEXT_UID = WF_UID  # 첨부문서UID
+        WF_SIZE = 1024  # 파일사이즈
+
+        insert_items.append((WF_UID, WA_BBS_PHY_NUM, WF_BBS_PHY_TYPE, WF_FILE_NUM, WF_FILE_PATH, WF_FILE_DIRE, WA_BBS_UID, WF_FILE_NAME, TEXT_UID, WF_SIZE))
+
+    print(insert_items)
+    INSET_QUERY = "insert into WC_FILE " \
+                  "(WF_UID, WA_BBS_PHY_NUM, WF_BBS_PHY_TYPE, WF_FILE_NUM, WF_FILE_PATH, WF_FILE_DIRE, WA_BBS_UID, WF_FILE_NAME, TEXT_UID, WF_SIZE) " \
+                  "values (:1,:2,:3,:4,:5,:6,:7,:8,:9,:10)"
+
+    insert_count = 0
+    for row in insert_items:
+        try:
+            # cursor.bindarraysize = len(insert_items)
+            # cursor.executemany(INSET_QUERY, insert_items)
+            cursor.execute(INSET_QUERY, row)
+            insert_count += 1
+        except:
+            raise Exception('# Query failed : %s' % INSET_QUERY)
+        finally:
+            conn.commit()
+            logger.debug('commit()')
+    logger.debug('%s개의 파일 정보가 성공적으로 INSERT 되었습니다.' % insert_count)
     cursor.close()
     conn.close()
 
