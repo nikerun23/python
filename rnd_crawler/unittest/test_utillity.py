@@ -89,6 +89,7 @@ class UtillityTestCase(unittest.TestCase):
                      '2018.4.25 ~ 5.8',
                      '2018.4.25 ~ 5.8 12시까지 마감',
                      '2018/04/25 ~ 2018/05/08',
+                     '2018-04-25 ~ 2018-05-08',
                      '''  
                          2018/04/25 ~ 2018/05/08
                         접수중
@@ -103,4 +104,5 @@ class UtillityTestCase(unittest.TestCase):
         self.assertEqual('2018-04-25', util.valid_start_end_date(3, ''' 
 			    2018-04-25
 			    ''', 'YYYY-MM-DD~YYYY-MM-DD'))
+        self.assertEqual('2017-11-15', util.valid_start_end_date(2, '2017-11-15 ~ 2018-01-31', 'YYYY-MM-DD~YYYY-MM-DD'))
 
