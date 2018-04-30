@@ -5,6 +5,7 @@ import rnd_crawler.utility as util
 import logging.handlers
 from rnd_crawler import ColoredFormatter
 import http
+import datetime
 
 def print_RnD(csv_info, yesterday_list, keyword_list, wc_company_dict):
     print(csv_info['SEED_ID'], '-', csv_info['부처'], '---', csv_info['기관'], '---------------------------------------')
@@ -75,17 +76,17 @@ def print_RnD(csv_info, yesterday_list, keyword_list, wc_company_dict):
             #         print(title.replace(u'\xa0', u' '), board_date)  # 결과 데이터 라인
             # util.get_board_content_selenium(title,url,select_title)
 
-            # if util.yesterday_check(yesterday_list, board_date):
-            if util.get_keyword_title(title, keyword_list):
-                if 'href' in title_list.attrs and board_date is not None:  # 제목 링크에 href가 존재할 경우만
-                    if 'http' in content_url[:7]:
-                        title_url = util.valid_a_href(content_url,title_list.get('href'))
-                        # print('href 가 있습니다 =',title_url)
-                        csv_info['content_WriteDate'] = board_date.strftime('%Y-%m-%d')
-                        rnd_content = util.get_board_content(title_url, csv_info, wc_company_dict)
-                        print(rnd_content)
-                        print('============================================================')
-                        rnd_content_list.append(rnd_content)
+            if util.yesterday_check(yesterday_list, board_date):
+                if util.get_keyword_title(title, keyword_list):
+                    if 'href' in title_list.attrs and board_date is not None:  # 제목 링크에 href가 존재할 경우만
+                        if 'http' in content_url[:7]:
+                            title_url = util.valid_a_href(content_url,title_list.get('href'))
+                            # print('href 가 있습니다 =',title_url)
+                            csv_info['content_WriteDate'] = board_date.strftime('%Y-%m-%d')
+                            rnd_content = util.get_board_content(title_url, csv_info, wc_company_dict)
+                            print(rnd_content)
+                            print('============================================================')
+                            rnd_content_list.append(rnd_content)
             # if 'onclick' in title_list.attrs:  # 제목 링크에 onclick 존재할 경우만
             #     onclick = title_list.attrs['onclick']
             #     print('onclick 가 있습니다 = ', title_list.attrs['onclick'])
@@ -118,14 +119,20 @@ if __name__ == '__main__':
     keyword_list = util.csv_read_keyword('csv/search_keyword.csv')
     db_info = util.csv_read_url('csv/DB_info.csv')[1]  # DB 접속 정보 0: 운영, 1: dev
     wc_company_dict = util.get_WC_COMPANY_NAME(db_info)
-    yesterday_list = util.get_yesterday_list()
+    # yesterday_list = util.get_yesterday_list()
     # yesterday_list = [datetime.date(2018, 2, 27)]
-    # yesterday_list = [datetime.date(2018, 3, 9), datetime.date(2018, 3, 10), datetime.date(2018, 3, 11)]
+    yesterday_list = [datetime.date(2018, 4, 20)
+        , datetime.date(2018, 4, 23)
+        , datetime.date(2018, 4, 24)
+        , datetime.date(2018, 4, 25)
+        , datetime.date(2018, 4, 26)
+        , datetime.date(2018, 4, 27)]
     print(keyword_list)
 
 
     def print_list(start_row,end_row,ignore=999):
         insert_rnd_content_list = []
+        insert_count = 0
         for index, info in enumerate(url_dict_list):
             row_num = index + 2
             print('csv Row Num :', row_num)
@@ -137,9 +144,16 @@ if __name__ == '__main__':
                 insert_rnd_content_list += rnd_content_list
             print('--------------------- 현재까지 INSERT 할 공고는 %s개입니다.' % len(insert_rnd_content_list))
 
-        print('INSERT 할 공고가 %s개 있습니다.' % len(insert_rnd_content_list))
+        rnd_len = len(insert_rnd_content_list)
+        print('INSERT 할 공고가 %s개 있습니다.' % rnd_len)
         if insert_rnd_content_list:
-            util.insert_table_WC_CONTENT(insert_rnd_content_list, db_info)
+            insert_count = util.insert_table_WC_CONTENT(insert_rnd_content_list, db_info)
+            # print('util.insert_table_WC_FILE')
+            # print('===========================================================')
+            # for file_list in insert_rnd_content_list:
+            #     print(file_list['files'])
+                # util.insert_table_WC_FILE(file_list['files'], db_info)
+        return insert_count
 
 
     def print_test(row_num):
@@ -147,14 +161,22 @@ if __name__ == '__main__':
         # print(url_dict_list[row_num])
         insert_rnd_content_list = print_RnD(url_dict_list[row_num], yesterday_list, keyword_list, wc_company_dict)
 
-        print('INSERT 할 공고가 %s개 있습니다.' % len(insert_rnd_content_list))
+        rnd_len = len(insert_rnd_content_list)
+
+        print('INSERT 할 공고가 %s개 있습니다.' % rnd_len)
         if insert_rnd_content_list:
             util.insert_table_WC_CONTENT(insert_rnd_content_list, db_info)
+        return rnd_len
 
-
-    print_list(20,20,999)  # 인자로 rowNum을 주면 제외하고 크롤링
-    # print_test(41)
+    rnd_len = print_list(3,3,999)  # 인자로 rowNum을 주면 제외하고 크롤링
+    # rnd_len = print_test(110)
 
     print('예외발생 : ',util.get_except_list())
+    except_list_len = len(util.get_except_list())
+    if except_list_len:
+        util.insert_table_WC_LOG('공고 웹크롤링 실패', db_info)
+    else:
+        util.insert_table_WC_LOG('공고 웹크롤링 %s개 성공' % rnd_len, db_info)
+
     print('++++++++++++++++++++++ 조회 완료 ++++++++++++++++++++++')
 
