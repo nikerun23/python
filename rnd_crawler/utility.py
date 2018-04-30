@@ -13,8 +13,11 @@ from multiprocessing import Pool
 import cx_Oracle
 import os
 import sys
-from importlib import reload
 import logging
+import urllib
+import chardet
+import cgi
+import uuid
 
 os.environ['NLS_LANG'] = '.UTF8'  # UnicodeEncodeError
 global except_list
@@ -275,7 +278,7 @@ def get_board_content(content_url, csv_info, wc_company_dict):
         except Exception as e:
             logger.error(e)
             logger.error('########## get_board_content 예외발생 !! : %s' % index)
-            html = 'except NoData'
+            html = ''
         finally:
             result_list.append(html)
 
@@ -374,7 +377,6 @@ def write_board_selenium(content):
     driver.execute_script('document.getElementById("#smart_editor2_content")')
     driver.find_element_by_css_selector('#smart_editor2_content body').send_keys(body)
     driver.find_element_by_css_selector('#smart_editor2_content body').send_keys(body)
-# document.getElementById('smart_editor2_content')
 
 
 # """" 타이틀 키워드를 필터링 합니다 """
@@ -464,14 +466,13 @@ def insert_table_WC_CONTENT(rnd_content_list, db_info):
     conn = cx_Oracle.connect(db_info['ID'], db_info['PWD'], db_info['IP'] + ':' + db_info['PORT'] + '/' + db_info['SID'])
     cursor = conn.cursor()
 
-    insert_items = []
+    insert_count = 0
     for rnd_content in rnd_content_list:
 
         # UID를 시퀀스로 조회한다
         UID_QUERY = "SELECT WC_CONTENT_PYTHON_SEQ.NEXTVAL FROM DUAL"
         cursor.execute(UID_QUERY)
-        # print("rnd_content[body]")
-        # print(rnd_content['body'])
+
         WA_UID = cursor.fetchone()[0]
         WA_BBS_UID = rnd_content['seed_id']  # 마스터UID
         WC_TITLE = rnd_content['title']  # 제목
@@ -480,7 +481,6 @@ def insert_table_WC_CONTENT(rnd_content_list, db_info):
         WC_DT = '' if 'NoData' == rnd_content['write_date'] else rnd_content['write_date']  # 고유작성일 (공고등록일)
         # WC_COLL_DT = 'SYSDATE'  # 수집일자
         WC_P_CONTENT = rnd_content['body']  # 내용
-        # WC_P_CONTENT = index
         WC_KEYWORD_CODE = '402001'  # 마스터분류코드 (공고 402001)
         WC_COMPANY_NAME = rnd_content['wc_company_name']  # 공고기관명(부처ID)
         COL3 = '' if 'NoData' == rnd_content['start_date'] else rnd_content['start_date']  # 공고일(접수 시작일)
@@ -490,76 +490,65 @@ def insert_table_WC_CONTENT(rnd_content_list, db_info):
         WC_MEM_ID = '파이썬'  # 파이썬
         WC_RO_DPT_NAME = rnd_content['wc_ro_dpt_name']  # 기관
 
-        # WA_BBS_UID = '20001'  # 마스터UID
-        # WC_TITLE = '한글 TEST'  # 제목
-        # WC_WRITER = '이현근'  # 작성자
-        # WC_URL = 'http://www.naver.com'  # URL
-        # WC_DT = '2018-07-07'  # 고유작성일
-        # WC_COLL_DT = 'SYSDATE'  # 수집일자
-        # WC_P_CONTENT = '내용'  # 내용
-        # WC_KEYWORD_CODE = '402001'  # 마스터분류코드 (공고 402001)
-        # WC_COMPANY_NAME = ''  # 공고기관명
-        # COL3 = ''  # 공고일
-        # COL4 = ''  # 접수마감일
-        # TEXT_UID = WA_UID  # TEXT_UID
-        # WA_DB_VIEW = 'Y'  #
-        # WC_MEM_ID = '파이썬'  #
+        insert_item = (WA_BBS_UID, WA_UID, WC_TITLE, WC_WRITER, WC_URL, WC_DT, WC_P_CONTENT, WC_KEYWORD_CODE, WC_COMPANY_NAME, COL3, COL4, TEXT_UID, WA_DB_VIEW, WC_MEM_ID, WC_RO_DPT_NAME)
 
-        insert_items.append((WA_BBS_UID, WA_UID, WC_TITLE, WC_WRITER, WC_URL, WC_DT, WC_P_CONTENT, WC_KEYWORD_CODE, WC_COMPANY_NAME, COL3, COL4, TEXT_UID, WA_DB_VIEW, WC_MEM_ID, WC_RO_DPT_NAME))
-
-    # print(insert_items)
-    INSET_QUERY = "insert into WC_CONTENT " \
-                   "(WA_BBS_UID, WA_UID, WC_TITLE, WC_WRITER, WC_URL, WC_DT, WC_COLL_DT, WC_P_CONTENT, WC_KEYWORD_CODE, WC_COMPANY_NAME, COL3, COL4, TEXT_UID, WA_DB_VIEW, WC_MEM_ID, WC_RO_DPT_NAME) " \
-                   "values (:1,:2,:3,:4,:5,TO_DATE(:6,'YYYY-MM-DD'),SYSDATE,:7,:8,:9,TO_DATE(:10,'YYYY-MM-DD'),TO_DATE(:11,'YYYY-MM-DD'),:12,:13,:14,:15)"
-    # INSET_QUERY = "insert into WC_CONTENT " \
-    #                "(WA_BBS_UID, WA_UID, WC_TITLE, WC_WRITER, WC_URL, WC_DT, WC_COLL_DT, TEST_TEXT, WC_KEYWORD_CODE, WC_COMPANY_NAME, COL3, COL4, TEXT_UID, WA_DB_VIEW, WC_MEM_ID, WC_RO_DPT_NAME) " \
-    #                "values (:1,:2,:3,:4,:5,TO_DATE(:6,'YYYY-MM-DD'),SYSDATE,:7,:8,:9,TO_DATE(:10,'YYYY-MM-DD'),TO_DATE(:11,'YYYY-MM-DD'),:12,:13,:14,:15)"
-    try:
-        # cursor.bindarraysize = len(insert_items)
-        # cursor.executemany(INSET_QUERY, insert_items)
-        insert_count = 0
-        for row in insert_items:
-            cursor.execute(INSET_QUERY, row)
+        INSET_QUERY = "insert into WC_CONTENT " \
+                      "(WA_BBS_UID, WA_UID, WC_TITLE, WC_WRITER, WC_URL, WC_DT, WC_COLL_DT, WC_P_CONTENT, WC_KEYWORD_CODE, WC_COMPANY_NAME, COL3, COL4, TEXT_UID, WA_DB_VIEW, WC_MEM_ID, WC_RO_DPT_NAME) " \
+                      "values (:1,:2,:3,:4,:5,TO_DATE(:6,'YYYY-MM-DD'),SYSDATE,:7,:8,:9,TO_DATE(:10,'YYYY-MM-DD'),TO_DATE(:11,'YYYY-MM-DD'),:12,:13,:14,:15)"
+        try:
+            cursor.execute(INSET_QUERY, insert_item)
+        except:
+            raise Exception('# Query failed : %s' % INSET_QUERY)
+        else:
             insert_count += 1
-    except:
-        raise Exception('# Query failed : %s' % INSET_QUERY)
-    finally:
-        logger.debug('%s개의 공고가 성공적으로 INSERT 되었습니다.' % insert_count)
-        if insert_count:
             conn.commit()
-            logger.debug('commit()')
+            # logger.debug('info commit()')
+            # print(rnd_content['files'])
+            insert_table_WC_FILE(rnd_content['files'], WA_UID, conn, WA_BBS_UID)
 
-    insert_table_WC_FILE(db_info)
-
+    logger.debug('%s개의 공고가 성공적으로 INSERT 되었습니다.' % insert_count)
     cursor.close()
+    # print('cursor.close()')
     conn.close()
+    # print('conn.close()')
+    return insert_count
 
-def insert_table_WC_FILE(file_list, db_info):
-    print('=== insert_table_WC_FILE ==========================================')
-    print(file_list)
-    conn = cx_Oracle.connect(db_info['ID'], db_info['PWD'], db_info['IP'] + ':' + db_info['PORT'] + '/' + db_info['SID'])
+def insert_table_WC_FILE(file_list, WA_UID, conn, WA_BBS_UID2):
+    # print('=== insert_table_WC_FILE ==========================================')
+    # print(file_list)
     cursor = conn.cursor()
 
     insert_items = []
-    for file in file_list:
+    for index, file in enumerate(file_list):
         # UID를 시퀀스로 조회한다
         UID_QUERY = "SELECT WC_FILE_PYTHON_SEQ.NEXTVAL FROM DUAL"
         cursor.execute(UID_QUERY)
 
+        download_path = 'upload/boardun/'
+        uid_file_name = str(uuid.uuid4())
+        file['uid_file_name'] = uid_file_name
+        file_download(file, download_path)
+
+        # 파일명 확장자 이후 데이터 정제
+        file_name = file['file_name']
+        for k in ('.hwp','.hml','.zip','.pdf','.jpg','.png','.gif','.hwt'):
+            if file_name.find(k) > 2:
+                file_name = file_name[:file_name.find(k) + 4]
+
         WF_UID = cursor.fetchone()[0]
-        WA_BBS_PHY_NUM = 10000  # WC_CONTENT 테이블의 WA_UID 컬럼과 동일
-        WF_BBS_PHY_TYPE = 1  # 타입 - 1
-        WF_FILE_NUM = 1  # 파일순서
-        WF_FILE_PATH = ''  # 난수의 파일명
-        WF_FILE_DIRE = 'upload/python'  # 저장된 경로+파일명 upload/boardun/931565f7-74c7-4efb-83e3-eafe832504cb(WF_FILE_PATH값과동일)
-        WA_BBS_UID = 999  # 999 Master코드
-        WF_FILE_NAME = file['file_name']  # 원본 파일명 (3.+과업설명서.hwp)
+        WA_BBS_PHY_NUM = WA_UID  # WC_CONTENT 테이블의 WA_UID 컬럼과 동일
+        WF_BBS_PHY_TYPE = 1  # 타입 : 1
+        WF_FILE_NUM = index + 1  # 파일순서
+        WF_FILE_PATH = uid_file_name  # 난수의 파일명
+        WF_FILE_DIRE = download_path + uid_file_name  # 저장된 경로+파일명 upload/boardun/931565f7-74c7-4efb-83e3-eafe832504cb(WF_FILE_PATH값과동일)
+        WA_BBS_UID = WA_BBS_UID2  # 999 Master코드
+        WF_FILE_NAME = file_name  # 원본 파일명 (3.+과업설명서.hwp)
         TEXT_UID = WF_UID  # 첨부문서UID
         WF_SIZE = 1024  # 파일사이즈
 
         insert_items.append((WF_UID, WA_BBS_PHY_NUM, WF_BBS_PHY_TYPE, WF_FILE_NUM, WF_FILE_PATH, WF_FILE_DIRE, WA_BBS_UID, WF_FILE_NAME, TEXT_UID, WF_SIZE))
 
-    print(insert_items)
+    # print(insert_items)
     INSET_QUERY = "insert into WC_FILE " \
                   "(WF_UID, WA_BBS_PHY_NUM, WF_BBS_PHY_TYPE, WF_FILE_NUM, WF_FILE_PATH, WF_FILE_DIRE, WA_BBS_UID, WF_FILE_NAME, TEXT_UID, WF_SIZE) " \
                   "values (:1,:2,:3,:4,:5,:6,:7,:8,:9,:10)"
@@ -575,10 +564,10 @@ def insert_table_WC_FILE(file_list, db_info):
             raise Exception('# Query failed : %s' % INSET_QUERY)
         finally:
             conn.commit()
-            logger.debug('commit()')
+            # logger.debug('file commit()')
     logger.debug('%s개의 파일 정보가 성공적으로 INSERT 되었습니다.' % insert_count)
+    # print('cursor.close()')
     cursor.close()
-    conn.close()
 
 def get_WC_COMPANY_NAME(db_info):
     conn = cx_Oracle.connect(db_info['ID'], db_info['PWD'], db_info['IP'] + ':' + db_info['PORT'] + '/' + db_info['SID'])
@@ -598,12 +587,108 @@ def get_WC_COMPANY_NAME(db_info):
     return wc_company_list
 
 
-def insert_logging(db_info):
+def insert_table_WC_LOG(log_list, db_info):
     conn = cx_Oracle.connect(db_info['ID'], db_info['PWD'], db_info['IP'] + ':' + db_info['PORT'] + '/' + db_info['SID'])
     cursor = conn.cursor()
 
-    INSERT_QUERY = "insert into () values()"
-    cursor.execute(INSERT_QUERY)
-    cursor.commit()
+    try:
+        UID_QUERY = "SELECT WC_LOG_PYTHON_SEQ.NEXTVAL FROM DUAL"
+        cursor.execute(UID_QUERY)
+
+        WM_BBS_UID = cursor.fetchone()[0]
+        WL_URL = 'seed_id'
+        WL_LOGS = log_list  # 첨부문서UID
+        WL_INS_COUNT = 0
+
+        insert_item = (WM_BBS_UID, WL_URL, WL_LOGS, WL_INS_COUNT)
+
+        INSET_QUERY = "insert into WC_LOG " \
+                      "(WM_BBS_UID, WL_URL, WL_LOGS, WL_INS_DT, WL_INS_COUNT) " \
+                      "values (:1,:2,:3,SYSDATE, :4)"
+
+        insert_count = 0
+        cursor.execute(INSET_QUERY, insert_item)
+        insert_count += 1
+    except:
+        raise Exception('# Query failed : %s' % INSET_QUERY)
+    finally:
+        conn.commit()
+        # logger.debug('file commit()')
+    logger.debug('%s개의 파일 정보가 성공적으로 INSERT 되었습니다.' % insert_count)
     cursor.close()
     conn.close()
+
+
+# def file_download(files, dir):
+#     headers = {
+#         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36'
+#     }
+#
+#     for file_info in files:
+#         file_name = file_info['file_name']
+#         url = file_info['url']
+#         logger.debug('url : %s' % url)
+#         response = requests.get(url, stream=True)
+#         file = response.read()
+#         # filename = re.findall("[^/]*$", url)[0]
+#         download_path = 'files/'+dir
+#         file_path = download_path+'/'+ file_name
+#         logger.debug('filename : %s' % file_name)
+#         logger.debug('file_path : %s' % file_path)
+#
+#         directory = os.path.dirname(file_path)  # 폴더경로만 반환한다
+#         if not os.path.exists(directory):
+#             os.makedirs(directory, exist_ok=True)  # exist_ok=True 상위 경로도 생성한다
+#
+#         f = open(file_path, "wb")
+#         for chunk in response.iter_content(chunk_size=1024):
+#             if chunk:
+#                 f.write(chunk)
+#
+#         f.close()
+
+
+
+def file_download(file_info,download_path):
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36'
+    }
+
+    year = str(datetime.date.today().year)
+    month_day = datetime.date.today().strftime('%m-%d')
+
+    url = file_info['url'].replace('%20', ' ')
+    # url = file_info['url']
+    print('file_download url :',url)
+
+    # kr_ulr = url[url.rfind('/'):]
+    # print(kr_ulr)
+    # url = url[:url.rfind('/')] + urllib.parse.quote(kr_ulr)
+    # print('file_download url :',url)
+
+    response = requests.get(url, stream=True)
+    # file = response.read()
+
+    # response = urllib.request.urlopen(url)  # ascii 코드 에러
+    # file = response.read()
+
+
+    file_name = file_info['uid_file_name']
+    file_path = download_path + file_name
+
+    print('file_path :', file_path)
+
+    directory = os.path.dirname(file_path)  # 폴더경로만 반환한다
+    if not os.path.exists(directory):
+        os.makedirs(directory, exist_ok=True)  # exist_ok=True 상위 경로도 생성한다
+
+    f = open(file_path, "wb")
+
+    for chunk in response.iter_content(chunk_size=1024):
+        if chunk:
+            f.write(chunk)
+
+    # f.write(file)
+    f.close()
+    time.sleep(1)
+
