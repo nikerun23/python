@@ -294,7 +294,6 @@ def get_board_content(content_url, csv_info, wc_company_dict):
                'end_date': result_list[3],
                'body': result_list[4],
                'files': result_list[5]}
-    # print(content)
     return content
 
 
@@ -439,27 +438,17 @@ def valid_start_end_date(date_type, date_str, content_DateFormat):
         if 2 == date_type:  # content_StartDate : 2
             date_str = date_str[:date_str.find('~')]
         elif 3 == date_type:  # content_EndDate : 3
-            year_str = date_str[:date_str.find('-')].strip()
+            end_str = date_str[date_str.find('~') + 1:].strip()
+            if re.search('\d{4}', end_str):  # 마감일에 연도가 없으면 시작일의 연도를 가져온다
+                year_str = end_str[:end_str.find('-')].strip()
+            else:
+                year_str = date_str[:date_str.find('-')].strip()
             date_str = date_str[date_str.find('~')+1:]
             if year_str not in date_str:  # 마감일에 연도 없을 경우 시작일의 연도를 붙여준다
                 date_str = year_str + '-' + date_str.strip()
     logger.debug('date_str : %s %s' % (date_str, '시작일' if date_type == 2 else '마감일'))
     logger.debug('result : %s' % valid_date(date_str, None).strftime('%Y-%m-%d'))
     return valid_date(date_str, None).strftime('%Y-%m-%d')
-
-
-def get_file_download(files):
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36'
-    }
-
-    for file in files:
-        file_name = file['file_name']
-        url = file['url']
-        logger.debug('url : %s' % url)
-        response = requests.get(url, stream=True, headers=headers)
-        filename = re.findall("[^/]*$", url)[0]
-        logger.debug('filename : %s' % filename)
 
 
 def insert_table_WC_CONTENT(rnd_content_list, db_info):
@@ -504,7 +493,8 @@ def insert_table_WC_CONTENT(rnd_content_list, db_info):
             conn.commit()
             # logger.debug('info commit()')
             # print(rnd_content['files'])
-            insert_table_WC_FILE(rnd_content['files'], WA_UID, conn, WA_BBS_UID)
+            if rnd_content['files']:
+                insert_table_WC_FILE(rnd_content['files'], WA_UID, conn, WA_BBS_UID)
 
     logger.debug('%s개의 공고가 성공적으로 INSERT 되었습니다.' % insert_count)
     cursor.close()
@@ -512,6 +502,7 @@ def insert_table_WC_CONTENT(rnd_content_list, db_info):
     conn.close()
     # print('conn.close()')
     return insert_count
+
 
 def insert_table_WC_FILE(file_list, WA_UID, conn, WA_BBS_UID2):
     # print('=== insert_table_WC_FILE ==========================================')
@@ -527,13 +518,16 @@ def insert_table_WC_FILE(file_list, WA_UID, conn, WA_BBS_UID2):
         download_path = 'upload/boardun/'
         uid_file_name = str(uuid.uuid4())
         file['uid_file_name'] = uid_file_name
-        file_download(file, download_path)
+
+        file_size = file_download(file, download_path)  # 물리파일 다운로드
 
         # 파일명 확장자 이후 데이터 정제
         file_name = file['file_name']
         for k in ('.hwp','.hml','.zip','.pdf','.jpg','.png','.gif','.hwt'):
             if file_name.find(k) > 2:
                 file_name = file_name[:file_name.find(k) + 4]
+        if '' == file_name:
+            file_name = 'download'
 
         WF_UID = cursor.fetchone()[0]
         WA_BBS_PHY_NUM = WA_UID  # WC_CONTENT 테이블의 WA_UID 컬럼과 동일
@@ -544,7 +538,7 @@ def insert_table_WC_FILE(file_list, WA_UID, conn, WA_BBS_UID2):
         WA_BBS_UID = WA_BBS_UID2  # 999 Master코드
         WF_FILE_NAME = file_name  # 원본 파일명 (3.+과업설명서.hwp)
         TEXT_UID = WF_UID  # 첨부문서UID
-        WF_SIZE = 1024  # 파일사이즈
+        WF_SIZE = file_size  # 파일사이즈
 
         insert_items.append((WF_UID, WA_BBS_PHY_NUM, WF_BBS_PHY_TYPE, WF_FILE_NUM, WF_FILE_PATH, WF_FILE_DIRE, WA_BBS_UID, WF_FILE_NAME, TEXT_UID, WF_SIZE))
 
@@ -569,6 +563,7 @@ def insert_table_WC_FILE(file_list, WA_UID, conn, WA_BBS_UID2):
     # print('cursor.close()')
     cursor.close()
 
+
 def get_WC_COMPANY_NAME(db_info):
     conn = cx_Oracle.connect(db_info['ID'], db_info['PWD'], db_info['IP'] + ':' + db_info['PORT'] + '/' + db_info['SID'])
     cursor = conn.cursor()
@@ -587,7 +582,7 @@ def get_WC_COMPANY_NAME(db_info):
     return wc_company_list
 
 
-def insert_table_WC_LOG(log_list, db_info):
+def insert_table_WC_LOG(seed_id, rnd_count, db_info):
     conn = cx_Oracle.connect(db_info['ID'], db_info['PWD'], db_info['IP'] + ':' + db_info['PORT'] + '/' + db_info['SID'])
     cursor = conn.cursor()
 
@@ -596,25 +591,19 @@ def insert_table_WC_LOG(log_list, db_info):
         cursor.execute(UID_QUERY)
 
         WM_BBS_UID = cursor.fetchone()[0]
-        WL_URL = 'seed_id'
-        WL_LOGS = log_list  # 첨부문서UID
-        WL_INS_COUNT = 0
+        WL_URL = seed_id
+        WL_LOGS = ''  # 첨부문서UID
+        WL_INS_COUNT = rnd_count
 
         insert_item = (WM_BBS_UID, WL_URL, WL_LOGS, WL_INS_COUNT)
-
         INSET_QUERY = "insert into WC_LOG " \
                       "(WM_BBS_UID, WL_URL, WL_LOGS, WL_INS_DT, WL_INS_COUNT) " \
                       "values (:1,:2,:3,SYSDATE, :4)"
-
-        insert_count = 0
         cursor.execute(INSET_QUERY, insert_item)
-        insert_count += 1
     except:
         raise Exception('# Query failed : %s' % INSET_QUERY)
     finally:
         conn.commit()
-        # logger.debug('file commit()')
-    logger.debug('%s개의 파일 정보가 성공적으로 INSERT 되었습니다.' % insert_count)
     cursor.close()
     conn.close()
 
@@ -648,7 +637,7 @@ def insert_table_WC_LOG(log_list, db_info):
 #         f.close()
 
 
-
+# """ 물리 파일을 저장한다 """
 def file_download(file_info,download_path):
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36'
@@ -672,7 +661,6 @@ def file_download(file_info,download_path):
     # response = urllib.request.urlopen(url)  # ascii 코드 에러
     # file = response.read()
 
-
     file_name = file_info['uid_file_name']
     file_path = download_path + file_name
 
@@ -691,4 +679,7 @@ def file_download(file_info,download_path):
     # f.write(file)
     f.close()
     time.sleep(1)
+    file_size = os.path.getsize(file_path)
+
+    return file_size
 
