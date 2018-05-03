@@ -57,6 +57,7 @@ def valid_date(date_str, date_fm):
     except Exception:
         logger.error('########## 날짜 양식에 문제가 있습니다 : %s' % date_str)
         except_list.append({date_str: '########## 날짜 양식에 문제가 있습니다'})
+        raise Exception('def valid_date() : 날짜 양식에 문제가 있습니다 : %s' % date_str)
         result = None
     else:
         result = datetime.date(date_time_str.year, date_time_str.month, date_time_str.day)
@@ -279,6 +280,7 @@ def get_board_content(content_url, csv_info, wc_company_dict):
             logger.error(e)
             logger.error('########## get_board_content 예외발생 !! : %s' % index)
             html = ''
+            raise Exception(e)
         finally:
             result_list.append(html)
 
@@ -408,17 +410,17 @@ def multiprocessing():
 
 
 # """" 공고 게시판 내용을 가져옵니다 Dict 타입으로 반환 """
-def get_board_content_selenium(title, url, select_title):
-    options = webdriver.ChromeOptions()
-    options.add_argument("--start-maximized")
-    driver = webdriver.Chrome('./chromedriver', chrome_options=options)
-    driver.get(url)
-    title_list = driver.find_elements_by_css_selector(select_title)
-    for tr in title_list:
-        # if tr.get_attribute('onclick') == onclick:
-        if title in tr.text:
-            logger.debug(tr.text)
-            # title.click()
+# def get_board_content_selenium(title, url, select_title):
+#     options = webdriver.ChromeOptions()
+#     options.add_argument("--start-maximized")
+#     driver = webdriver.Chrome('./chromedriver', chrome_options=options)
+#     driver.get(url)
+#     title_list = driver.find_elements_by_css_selector(select_title)
+#     for tr in title_list:
+#         # if tr.get_attribute('onclick') == onclick:
+#         if title in tr.text:
+#             logger.debug(tr.text)
+#             # title.click()
             # time.sleep(2)
 
 
@@ -432,23 +434,27 @@ def valid_start_end_date(date_type, date_str, content_DateFormat):
     if re.search('[0-9]+', date_str, re.DOTALL) is None:  # 숫자가 없으면 return ''
         logger.debug('########## 숫자가 없습니다 : %s' % date_str)
         return ''
-    date_str = date_str.strip().replace('.','-').replace('/','-')
-    date_str = re.sub('[^0-9~/시:\s-]', '', date_str)  # 2017-12-29~2018-01-03
-    if 'YYYY-MM-DD~YYYY-MM-DD' == content_DateFormat:
-        if 2 == date_type:  # content_StartDate : 2
-            date_str = date_str[:date_str.find('~')]
-        elif 3 == date_type:  # content_EndDate : 3
-            end_str = date_str[date_str.find('~') + 1:].strip()
-            if re.search('\d{4}', end_str):  # 마감일에 연도가 없으면 시작일의 연도를 가져온다
-                year_str = end_str[:end_str.find('-')].strip()
-            else:
-                year_str = date_str[:date_str.find('-')].strip()
-            date_str = date_str[date_str.find('~')+1:]
-            if year_str not in date_str:  # 마감일에 연도 없을 경우 시작일의 연도를 붙여준다
-                date_str = year_str + '-' + date_str.strip()
-    logger.debug('date_str : %s %s' % (date_str, '시작일' if date_type == 2 else '마감일'))
-    logger.debug('result : %s' % valid_date(date_str, None).strftime('%Y-%m-%d'))
-    return valid_date(date_str, None).strftime('%Y-%m-%d')
+    try:
+        date_str = date_str.strip().replace('.','-').replace('/','-')
+        date_str = re.sub('[^0-9~/시:\s-]', '', date_str)  # 2017-12-29~2018-01-03
+        if 'YYYY-MM-DD~YYYY-MM-DD' == content_DateFormat:
+            if 2 == date_type:  # content_StartDate : 2
+                date_str = date_str[:date_str.find('~')]
+            elif 3 == date_type:  # content_EndDate : 3
+                end_str = date_str[date_str.find('~') + 1:].strip()
+                if re.search('\d{4}', end_str):  # 마감일에 연도가 없으면 시작일의 연도를 가져온다
+                    year_str = end_str[:end_str.find('-')].strip()
+                else:
+                    year_str = date_str[:date_str.find('-')].strip()
+                date_str = date_str[date_str.find('~')+1:]
+                if year_str not in date_str:  # 마감일에 연도 없을 경우 시작일의 연도를 붙여준다
+                    date_str = year_str + '-' + date_str.strip()
+        logger.debug('date_str : %s %s' % (date_str, '시작일' if date_type == 2 else '마감일'))
+        logger.debug('result : %s' % valid_date(date_str, None).strftime('%Y-%m-%d'))
+        result = valid_date(date_str, None).strftime('%Y-%m-%d')
+    except Exception as e:
+        raise Exception(e)
+    return result
 
 
 def insert_table_WC_CONTENT(rnd_content_list, db_info):
