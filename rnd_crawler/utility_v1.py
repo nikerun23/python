@@ -368,7 +368,7 @@ def get_except_list():
 
 # """" 공고 시작일, 마감일을 정제하여 반환합니다 """
 def valid_start_end_date(date_type, date_str, content_DateFormat):
-    print('date_type : %s, date_str : %s, content_DateFormat : %s' % (date_type, date_str, content_DateFormat))
+    logger.debug('date_type : %s, date_str : %s, content_DateFormat : %s' % (date_type, date_str, content_DateFormat))
     if re.search('[0-9]+', date_str, re.DOTALL) is None:  # 숫자가 없으면 return ''
         logger.debug('########## 숫자가 없습니다 : %s' % date_str)
         return ''
@@ -428,6 +428,11 @@ def insert_table_WC_CONTENT(rnd_content_list, db_info):
         INSET_QUERY = "insert into WC_CONTENT " \
                       "(WA_BBS_UID, WA_UID, WC_TITLE, WC_WRITER, WC_URL, WC_DT, WC_COLL_DT, WC_P_CONTENT, WC_KEYWORD_CODE, WC_COMPANY_NAME, COL3, COL4, TEXT_UID, WA_DB_VIEW, WC_MEM_ID, WC_RO_DPT_NAME) " \
                       "values (:1,:2,:3,:4,:5,TO_DATE(:6,'YYYY-MM-DD'),SYSDATE,:7,:8,:9,TO_DATE(:10,'YYYY-MM-DD'),TO_DATE(:11,'YYYY-MM-DD'),:12,:13,:14,:15)"
+        # not exists
+        # INSET_QUERY = "insert into WC_CONTENT " \
+        #               "(WA_BBS_UID, WA_UID, WC_TITLE, WC_WRITER, WC_URL, WC_DT, WC_COLL_DT, WC_P_CONTENT, WC_KEYWORD_CODE, WC_COMPANY_NAME, COL3, COL4, TEXT_UID, WA_DB_VIEW, WC_MEM_ID, WC_RO_DPT_NAME) " \
+        #               "select :1,:2,:3,:4,:5,TO_DATE(:6,'YYYY-MM-DD'),SYSDATE,:7,:8,:9,TO_DATE(:10,'YYYY-MM-DD'),TO_DATE(:11,'YYYY-MM-DD'),:12,:13,:14,:15 from dual" \
+        #               "where not exists (select WC_TITLE from WC_CONTENT where WC_TITLE = ':3')"
         try:
             cursor.execute(INSET_QUERY, insert_item)
         except:
@@ -436,7 +441,7 @@ def insert_table_WC_CONTENT(rnd_content_list, db_info):
             insert_count += 1
             conn.commit()
             # logger.debug('info commit()')
-            # print(rnd_content['files'])
+            # logger.debug(rnd_content['files'])
             if rnd_content['files']:
                 insert_table_WC_FILE(rnd_content['files'], WA_UID, conn, WA_BBS_UID)
 
@@ -448,8 +453,8 @@ def insert_table_WC_CONTENT(rnd_content_list, db_info):
 
 
 def insert_table_WC_FILE(file_list, WA_UID, conn, WA_BBS_UID2):
-    # print('=== insert_table_WC_FILE ==========================================')
-    # print(file_list)
+    # logger.debug('=== insert_table_WC_FILE ==========================================')
+    # logger.debug(file_list)
     cursor = conn.cursor()
 
     insert_items = []
@@ -466,9 +471,12 @@ def insert_table_WC_FILE(file_list, WA_UID, conn, WA_BBS_UID2):
 
         # 파일명 확장자 이후 데이터 정제
         file_name = file['file_name']
-        for k in ('.hwp','.hml','.zip','.pdf','.jpg','.png','.gif','.hwt'):
+        for k in ('.hwp','.hml','.zip','.pdf','.jpg','.png','.gif','.hwt','.xlsx','.doc','.xls'):
             if file_name.find(k) > 2:
-                file_name = file_name[:file_name.find(k) + 4]
+                if k == '.xlsx':
+                    file_name = file_name[:file_name.find(k) + 5]
+                else:
+                    file_name = file_name[:file_name.find(k) + 4]
         if '' == file_name:
             file_name = 'download'
 
@@ -557,14 +565,14 @@ def file_download(file_info,download_path):
 
     url = file_info['url'].replace('%20', ' ')
 
-    print('file_download url :',url)
+    logger.debug('file_download url : %s' % url)
 
     response = requests.get(url, stream=True)
 
     file_name = file_info['uid_file_name']
     file_path = download_path + file_name
 
-    print('file_path :', file_path)
+    logger.debug('file_path : %s' % file_path)
 
     directory = os.path.dirname(file_path)  # 폴더경로만 반환한다
     if not os.path.exists(directory):
@@ -581,4 +589,19 @@ def file_download(file_info,download_path):
     file_size = os.path.getsize(file_path)
 
     return file_size
+
+# """ csv파일을 읽습니다 """
+def csv_read_url(src):
+    url_dict_list = []
+    try:
+        csv_reader = csv.DictReader(open(src, encoding='UTF8'))
+        url_field_names = csv_reader.fieldnames
+        for row in csv_reader.reader:
+            url_dict = {}
+            for ii, h in enumerate(url_field_names):
+                url_dict[h] = row[ii].strip()
+            url_dict_list.append(url_dict)
+    except Exception as e:
+        raise Exception(e)
+    return url_dict_list
 
