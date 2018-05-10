@@ -185,7 +185,7 @@ def valid_a_href(url, href):
 
 
 # """" 공고 게시판 내용을 가져옵니다 Dict 타입으로 반환 """
-def get_board_content(content_url, csv_info, wc_company_dict):
+def get_board_content(content_url, csv_info, wc_company_dict, html=None):
     select_list = [
         csv_info['content_Title'],
         csv_info['content_WriteDate'],
@@ -195,16 +195,18 @@ def get_board_content(content_url, csv_info, wc_company_dict):
         csv_info['content_Files'],
         csv_info['SEED_ID']
     ]
-    if 'verify=False' == csv_info['etc_2']:
-        req = requests.get(content_url, verify=False)
-    else:
-        req = requests.get(content_url)
-    # etc_1 열
-    if 'utf-8' == csv_info['ETC_1']:
-        req.encoding = 'utf-8'
-    elif 'euc-kr' == csv_info['ETC_1']:
-        req.encoding = 'euc-kr'
-    html = req.text
+    if html is None:
+        print('html is None')
+        if 'verify=False' == csv_info['etc_2']:
+            req = requests.get(content_url, verify=False)
+        else:
+            req = requests.get(content_url)
+        # etc_1 열
+        if 'utf-8' == csv_info['etc_1']:
+            req.encoding = 'utf-8'
+        elif 'euc-kr' == csv_info['etc_1']:
+            req.encoding = 'euc-kr'
+        html = req.text
 
     soup = bs(html, 'lxml')
 
@@ -266,7 +268,7 @@ def get_board_content(content_url, csv_info, wc_company_dict):
                'title': valid_title(result_list[0]),
                'url': content_url,
                'dept_cd': csv_info['부처'],
-               'wc_company_name': wc_company_dict[csv_info['부처']],
+               'wc_company_name': csv_info['부처'],
                'wc_ro_dpt_name': csv_info['기관'],
                'write_date': csv_info['content_WriteDate'],
                'start_date': result_list[2],
@@ -274,6 +276,37 @@ def get_board_content(content_url, csv_info, wc_company_dict):
                'body': result_list[4],
                'files': result_list[5]}
     return content
+
+
+# """" Selenium을 이용하여 (str)Html 반환 """
+def get_board_content_selenium(board_url, onclick, csv_info, wc_company_dict):
+    options = webdriver.ChromeOptions()
+    options.add_argument("--disable-extensions")
+    options.add_argument("--start-maximized")
+    driver = webdriver.Chrome('./chromedriver', chrome_options=options)
+    driver.set_page_load_timeout(60)  # selenium timeout 60초
+    try:
+        driver.get(board_url)
+        time.sleep(5)
+        print('onclick : ', onclick)
+        css_click = 'a[onclick="%s"' % onclick
+        print('css_click :', css_click)
+        driver.find_element_by_css_selector(css_click).click()
+        print('driver.current_url :',driver.current_url)
+        time.sleep(5)
+
+        html = driver.page_source
+        rnd_content = get_board_content(driver.current_url, csv_info, wc_company_dict, html)
+        print(rnd_content)
+    except TimeoutException as e:
+        logger.error('########## Selenium 작동이 중지 되었습니다 : %s' % e)
+        html = ''
+    except Exception as e:
+        logger.error('########## Selenium 작동이 중지 되었습니다 : %s' % e)
+        html = ''
+    finally:
+        driver.close()
+        return html
 
 
 def sselenium_headless_read_board(csv_info):
@@ -597,6 +630,10 @@ def write_board_selenium(content):
     driver.execute_script('document.getElementsByName("roEndDt")[0].removeAttribute("readonly")')
     driver.find_element_by_name('roEndDt').send_keys(ro_end_dt)
     time.sleep(2)
-    driver.execute_script('document.getElementById("#smart_editor2_content")')
-    driver.find_element_by_css_selector('#smart_editor2_content body').send_keys(body)
-    driver.find_element_by_css_selector('#smart_editor2_content body').send_keys(body)
+
+    # driver.find_element_by_css_selector('.se2_inputarea').send_keys('send_keys')  # 공고형태
+    driver.find_element_by_css_selector('#smart_editor2_content .se2_to_html').click()  # 공고형태
+
+    # driver.execute_script('document.getElementById("#smart_editor2_content")')
+    # driver.find_element_by_css_selector('#smart_editor2_content body').send_keys(body)
+    # driver.find_element_by_css_selector('#smart_editor2_content body').send_keys(body)
