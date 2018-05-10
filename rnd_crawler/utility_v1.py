@@ -113,36 +113,39 @@ def select_TUN_WEB_CRLN_CNDTN(db_info):
                    "W.ELMT_RO_START_DT_CSS_INF, W.ELMT_RO_END_DT_CSS_INF, (select cd_NM from TCO_CD_DTL where " \
                    "W.ELMT_RO_START_END_DT_TYP_CD = CD_DTL_ID) AS ELMT_RO_START_END_DT_TYP_CD, " \
                    "W.ELMT_RO_FILE_NM_CSS_INF, W.ELMT_RO_FILE_URL_CSS_INF, W.REMARKS from TUN_WEB_CRLN_CNDTN W ORDER BY W.WEB_CRLN_ID"
-    cursor.prepare(SELECT_QUERY)
-    cursor.execute(None, '')
-    select_list = cursor.fetchall()
+    try:
+        cursor.prepare(SELECT_QUERY)
+        cursor.execute(None, '')
+        select_list = cursor.fetchall()
 
-    url_dict_list = []
-    for info in select_list:
-        url_dict = {
-            'SEED_ID': info[0],
-            '부처': info[1],
-            '기관': info[2],
-            '게시판명': info[3],
-            'URL': info[4],
-            'USE_YN': info[5],
-            'ETC_1': '' if info[6] is None else info[6],
-            'ETC_2': '' if info[7] is None else info[7],
-            'TR': info[8],
-            'Title': info[9],
-            'Date': info[10],
-            'DateFormat': '' if info[11] is None else info[11],
-            'ClickCSS': '' if info[12] is None else info[12],
-            'content_url': '' if info[13] is None else info[13],
-            'content_Title': info[14],
-            'content_Body': info[15],
-            'content_StartDate': info[16],
-            'content_EndDate': info[17],
-            'content_DateFormat': info[18],
-            'content_Files': info[19],
-            'content_File_url':  '' if info[20] is None else info[20]
-        }
-        url_dict_list.append(url_dict)
+        url_dict_list = []
+        for info in select_list:
+            url_dict = {
+                'SEED_ID': info[0],
+                '부처': info[1],
+                '기관': info[2],
+                '게시판명': info[3],
+                'URL': info[4],
+                'USE_YN': info[5],
+                'ETC_1': '' if info[6] is None else info[6],
+                'ETC_2': '' if info[7] is None else info[7],
+                'TR': info[8],
+                'Title': info[9],
+                'Date': info[10],
+                'DateFormat': '' if info[11] is None else info[11],
+                'ClickCSS': '' if info[12] is None else info[12],
+                'content_url': '' if info[13] is None else info[13],
+                'content_Title': info[14],
+                'content_Body': info[15],
+                'content_StartDate': info[16],
+                'content_EndDate': info[17],
+                'content_DateFormat': info[18],
+                'content_Files': info[19],
+                'content_File_url':  '' if info[20] is None else info[20]
+            }
+            url_dict_list.append(url_dict)
+    except:
+        raise Exception('# Query failed : %s' % SELECT_QUERY)
 
     cursor.close()
     conn.close()
@@ -155,25 +158,28 @@ def select_TUN_WEB_CRLN_KWD(db_info):
     conn = cx_Oracle.connect(db_info['ID'], db_info['PWD'],db_info['IP'] + ':' + db_info['PORT'] + '/' + db_info['SID'])
     cursor = conn.cursor()
 
-    # search_keyword 를 select 한다
-    SELECT_QUERY = "select K.KWD from TUN_WEB_CRLN_KWD K LEFT JOIN TCO_CD_DTL C ON K.KWD_TYP_CD = C.CD_DTL_ID where K.USE_YN = 'Y' and C.CD_NM = 'search_keyword' ORDER BY K.KWD_ID"
-    cursor.execute(SELECT_QUERY)
-    search_keywords = cursor.fetchall()
+    try:
+        # search_keyword 를 select 한다
+        SELECT_QUERY = "select K.KWD from TUN_WEB_CRLN_KWD K LEFT JOIN TCO_CD_DTL C ON K.KWD_TYP_CD = C.CD_DTL_ID where K.USE_YN = 'Y' and C.CD_NM = 'search_keyword' ORDER BY K.KWD_ID"
+        cursor.execute(SELECT_QUERY)
+        search_keywords = cursor.fetchall()
 
-    # ignore_keyword 를 select 한다
-    SELECT_QUERY = "select K.KWD from TUN_WEB_CRLN_KWD K LEFT JOIN TCO_CD_DTL C ON K.KWD_TYP_CD = C.CD_DTL_ID where K.USE_YN = 'Y' and C.CD_NM = 'ignore_keyword' ORDER BY K.KWD_ID"
-    cursor.execute(SELECT_QUERY)
-    ignore_keywords = cursor.fetchall()
+        # ignore_keyword 를 select 한다
+        SELECT_QUERY = "select K.KWD from TUN_WEB_CRLN_KWD K LEFT JOIN TCO_CD_DTL C ON K.KWD_TYP_CD = C.CD_DTL_ID where K.USE_YN = 'Y' and C.CD_NM = 'ignore_keyword' ORDER BY K.KWD_ID"
+        cursor.execute(SELECT_QUERY)
+        ignore_keywords = cursor.fetchall()
 
-    search_keyword_list = []
-    ignore_keyword_list = []
-    for k in search_keywords:
-        search_keyword_list.append(k[0])
-    for k in ignore_keywords:
-        ignore_keyword_list.append(k[0])
+        search_keyword_list = []
+        ignore_keyword_list = []
+        for k in search_keywords:
+            search_keyword_list.append(k[0])
+        for k in ignore_keywords:
+            ignore_keyword_list.append(k[0])
 
-    keyword_list = {'search_keyword': search_keyword_list,
-        'ignore_keyword': ignore_keyword_list}
+        keyword_list = {'search_keyword': search_keyword_list,
+            'ignore_keyword': ignore_keyword_list}
+    except:
+        raise Exception('# Query failed : %s' % SELECT_QUERY)
 
     cursor.close()
     conn.close()
@@ -306,6 +312,37 @@ def get_board_content(content_url, csv_info, wc_company_dict):
                'body': result_list[4],
                'files': result_list[5]}
     return content
+
+
+# """" Selenium을 이용하여 (str)Html 반환 """
+def get_board_content_selenium(board_url, onclick, csv_info, wc_company_dict):
+    options = webdriver.ChromeOptions()
+    options.add_argument("--disable-extensions")
+    options.add_argument("--start-maximized")
+    driver = webdriver.Chrome('./chromedriver', chrome_options=options)
+    driver.set_page_load_timeout(60)  # selenium timeout 60초
+    try:
+        driver.get(board_url)
+        time.sleep(5)
+        print('onclick : ', onclick)
+        css_click = 'a[onclick="%s"' % onclick
+        print('css_click :', css_click)
+        driver.find_element_by_css_selector(css_click).click()
+        print('driver.current_url :',driver.current_url)
+        time.sleep(5)
+
+        html = driver.page_source
+        rnd_content = get_board_content('', csv_info, wc_company_dict, html)
+        print(rnd_content)
+    except TimeoutException as e:
+        logger.error('########## Selenium 작동이 중지 되었습니다 : %s' % e)
+        html = ''
+    except Exception as e:
+        logger.error('########## Selenium 작동이 중지 되었습니다 : %s' % e)
+        html = ''
+    finally:
+        driver.close()
+        return html
 
 
 def sselenium_headless_read_board(csv_info):
@@ -517,14 +554,17 @@ def get_WC_COMPANY_NAME(db_info):
     conn = cx_Oracle.connect(db_info['ID'], db_info['PWD'], db_info['IP'] + ':' + db_info['PORT'] + '/' + db_info['SID'])
     cursor = conn.cursor()
 
-    SELECT_QUERY = "select CD_DTL_ID, CD_NM from TCO_CD_DTL where CD_ID = 400"
-    cursor.execute(SELECT_QUERY)
+    try:
+        SELECT_QUERY = "select CD_DTL_ID, CD_NM from TCO_CD_DTL where CD_ID = 400"
+        cursor.execute(SELECT_QUERY)
 
-    select_list = cursor.fetchall()
-    wc_company_list = {}
+        select_list = cursor.fetchall()
+        wc_company_list = {}
 
-    for item in select_list:
-        wc_company_list[item[1]] = item[0]
+        for item in select_list:
+            wc_company_list[item[1]] = item[0]
+    except:
+        raise Exception('# Query failed : %s' % SELECT_QUERY)
 
     cursor.close()
     conn.close()
@@ -589,19 +629,4 @@ def file_download(file_info,download_path):
     file_size = os.path.getsize(file_path)
 
     return file_size
-
-# """ csv파일을 읽습니다 """
-def csv_read_url(src):
-    url_dict_list = []
-    try:
-        csv_reader = csv.DictReader(open(src, encoding='UTF8'))
-        url_field_names = csv_reader.fieldnames
-        for row in csv_reader.reader:
-            url_dict = {}
-            for ii, h in enumerate(url_field_names):
-                url_dict[h] = row[ii].strip()
-            url_dict_list.append(url_dict)
-    except Exception as e:
-        raise Exception(e)
-    return url_dict_list
 
