@@ -72,11 +72,10 @@ def print_RnD(csv_info, yesterday_list, keyword_list, wc_company_dict):
             board_date = util.valid_date(date_list.text, date_format)  # datetime객체로 반환
 
             # 전일 공고만 출력
-            # if util.yesterday_check(yesterday_list, board_date):
-            #     if util.get_keyword_title(title, keyword_list):
+            if util.yesterday_check(yesterday_list, board_date):
+                if util.get_keyword_title(title, keyword_list):
                     # print("%s %s" % (title, board_date))  # 결과 데이터 라인
-                    # logger.info("%s %s" % (title.replace('\xad','').replace('\xa0','').replace('\u200b','').replace('\u2024',''), board_date))  # 결과 데이터 라인
-                    # logger.info("%s %s" % (title, board_date))  # 결과 데이터 라인
+                    logger.info("%s %s" % (title.replace('\xad','').replace('\xa0','').replace('\u200b','').replace('\u2024',''), board_date))  # 결과 데이터 라인
 
             # util.get_board_content_selenium(title,url,select_title)
 
@@ -91,14 +90,15 @@ def print_RnD(csv_info, yesterday_list, keyword_list, wc_company_dict):
             #             logger.debug('============================================================')
 
             # if util.yesterday_check(yesterday_list, board_date):
-            if util.get_keyword_title(title, keyword_list):
-                if 'onclick' in title_list.attrs:  # 제목 링크에 onclick 존재할 경우만
-                    onclick = title_list.attrs['onclick']
-                    csv_info['content_WriteDate'] = board_date.strftime('%Y-%m-%d')  # 공고 작성일
-                    rnd_content = util_v0.get_board_content_selenium(url, onclick, csv_info, wc_company_dict)
-                    logger.debug('onclick 가 있습니다 = %s' % title_list.attrs['onclick'])
-                    title_href = onclick[onclick.find("'")+1:onclick.rfind("'")]
-                    logger.debug(content_url+title_href)
+            # if util.get_keyword_title(title, keyword_list):
+            #     if 'onclick' in content_url:  # 제목 링크에 onclick 존재할 경우만
+            #     if 'onclick' in title_list.attrs:  # 제목 링크에 onclick 존재할 경우만
+                    # onclick = title_list.attrs['onclick']
+                    # csv_info['content_WriteDate'] = board_date.strftime('%Y-%m-%d')  # 공고 작성일
+                    # rnd_content = util_v0.get_board_content_selenium(url, onclick, csv_info, wc_company_dict)
+                    # logger.debug('onclick 가 있습니다 = %s' % title_list.attrs['onclick'])
+                    # title_href = onclick[onclick.find("'")+1:onclick.rfind("'")]
+                    # logger.debug(content_url+title_href)
 
         except Exception as e:
             logger.error(e)
@@ -158,7 +158,7 @@ if __name__ == '__main__':
             logger.debug(crawler_info['URL'])
             print_RnD(url_dict_list[row_num], yesterday_list, keyword_list, wc_company_dict)
 
-        print_list(78,78,999)  # 인자로 rowNum을 주면 제외하고 크롤링
+        print_list(1,130,999)  # 인자로 rowNum을 주면 제외하고 크롤링
         # print_test(59)  # SEED_ID 200뒷번호
     except Exception as e:
         logger.debug('==========================================================')
