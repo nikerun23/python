@@ -180,7 +180,11 @@ def modify_date(date_str, date_fm):
 # """ URL을 수정하고 호스트와 합쳐 반환합니다 """
 def valid_a_href(url, href):
     href = href.replace(' ', '%20').replace('./', '/').replace('../', '/').replace('&amp;', '&')
-    result = url + href
+    if 'http:' in href:
+        result = href
+    else:
+        result = url + href
+
     return result
 
 
@@ -247,6 +251,8 @@ def get_board_content(content_url, csv_info, wc_company_dict, html=None):
                 elif index == 5:
                     if 'onclick' != css_select and 'ajax' != css_select and 'javascript' != css_select:
                         file_list = soup.select(css_select)
+                        # print('file_list css_select :',css_select)
+                        # print('file_list :',file_list)
                         for i2, f in enumerate(file_list):
                             file_dict = {'file_name': f.text.strip(), 'url': valid_a_href(csv_info['content_File_url'], f.get('href'))}
                             file_list[i2] = file_dict
@@ -288,16 +294,16 @@ def get_board_content_selenium(board_url, onclick, csv_info, wc_company_dict):
     try:
         driver.get(board_url)
         time.sleep(5)
-        print('onclick : ', onclick)
+        logger.debug('onclick : %s' % onclick)
         css_click = 'a[onclick="%s"' % onclick
-        print('css_click :', css_click)
+        logger.debug('css_click : %s' % css_click)
         driver.find_element_by_css_selector(css_click).click()
-        print('driver.current_url :',driver.current_url)
+        logger.debug('driver.current_url : %s' % driver.current_url)
         time.sleep(5)
 
         html = driver.page_source
         rnd_content = get_board_content(driver.current_url, csv_info, wc_company_dict, html)
-        print(rnd_content)
+        logger.debug(rnd_content)
     except TimeoutException as e:
         logger.error('########## Selenium 작동이 중지 되었습니다 : %s' % e)
         html = ''
