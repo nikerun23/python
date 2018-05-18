@@ -221,8 +221,11 @@ def get_board_content(content_url, csv_info, wc_company_dict, html=None):
             if '' != css_select and 'NoData' != css_select:  # csv파일 공백
                 # content_Title
                 if index == 0:
-                    html = soup.select_one(css_select).text
-                # content_StartDate, content_EndDate
+                    if 'trTitle' != css_select:
+                        html = soup.select_one(css_select).text
+                    else:
+                        html = csv_info['trTitle']
+                        # content_StartDate, content_EndDate
                 elif index in (2,3):
                     if 2 == index and 'content_WriteDate' == css_select:  # 공고일을 공고 시작일로 한다
                         html = csv_info['content_WriteDate']
