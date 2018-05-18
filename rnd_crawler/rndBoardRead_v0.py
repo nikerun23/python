@@ -95,6 +95,7 @@ def print_RnD(csv_info, yesterday_list, keyword_list, wc_company_dict):
             #     if 'onclick' in title_list.attrs:  # 제목 링크에 onclick 존재할 경우만
                     # onclick = title_list.attrs['onclick']
                     # csv_info['content_WriteDate'] = board_date.strftime('%Y-%m-%d')  # 공고 작성일
+                    # csv_info['trTitle'] = title
                     # rnd_content = util_v0.get_board_content_selenium(url, onclick, csv_info, wc_company_dict)
                     # logger.debug('onclick 가 있습니다 = %s' % title_list.attrs['onclick'])
                     # title_href = onclick[onclick.find("'")+1:onclick.rfind("'")]
