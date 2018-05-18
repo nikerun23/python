@@ -220,7 +220,10 @@ def modify_date(date_str, date_fm):
 # """ URL을 수정하고 호스트와 합쳐 반환합니다 """
 def valid_a_href(url, href):
     href = href.replace(' ', '%20').replace('./', '/').replace('../', '/').replace('&amp;', '&')
-    result = url + href
+    if 'http:' in href:
+        result = href
+    else:
+        result = url + href
     return result
 
 
