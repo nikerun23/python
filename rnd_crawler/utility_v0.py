@@ -295,8 +295,17 @@ def get_board_content_selenium(board_url, onclick, csv_info, wc_company_dict):
     driver = webdriver.Chrome('./chromedriver', chrome_options=options)
     driver.set_page_load_timeout(60)  # selenium timeout 60초
     try:
+
         driver.get(board_url)
         time.sleep(5)
+
+        if 'onclickCSSClick' == csv_info['content_url']:
+            if ',' in csv_info['ClickCSS']:
+                click_css_list = csv_info['ClickCSS'].split(',')
+            for css in click_css_list:
+                driver.find_element_by_css_selector(css).click()
+                time.sleep(5)
+
         logger.debug('onclick : %s' % onclick)
         css_click = 'a[onclick="%s"' % onclick
         logger.debug('css_click : %s' % css_click)
