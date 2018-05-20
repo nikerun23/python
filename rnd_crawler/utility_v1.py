@@ -325,18 +325,27 @@ def get_board_content_selenium(board_url, onclick, csv_info, wc_company_dict):
     driver = webdriver.Chrome('./chromedriver', chrome_options=options)
     driver.set_page_load_timeout(60)  # selenium timeout 60초
     try:
+
         driver.get(board_url)
         time.sleep(5)
-        print('onclick : ', onclick)
+
+        if 'onclickCSSClick' == csv_info['content_url']:
+            if ',' in csv_info['ClickCSS']:
+                click_css_list = csv_info['ClickCSS'].split(',')
+            for css in click_css_list:
+                driver.find_element_by_css_selector(css).click()
+                time.sleep(5)
+
+        logger.debug('onclick : %s' % onclick)
         css_click = 'a[onclick="%s"' % onclick
-        print('css_click :', css_click)
+        logger.debug('css_click : %s' % css_click)
         driver.find_element_by_css_selector(css_click).click()
-        print('driver.current_url :',driver.current_url)
+        logger.debug('driver.current_url : %s' % driver.current_url)
         time.sleep(5)
 
         html = driver.page_source
-        rnd_content = get_board_content('', csv_info, wc_company_dict, html)
-        print(rnd_content)
+        rnd_content = get_board_content(driver.current_url, csv_info, wc_company_dict, html)
+        logger.debug(rnd_content)
     except TimeoutException as e:
         logger.error('########## Selenium 작동이 중지 되었습니다 : %s' % e)
         html = ''
