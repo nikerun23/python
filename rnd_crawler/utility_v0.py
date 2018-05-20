@@ -8,9 +8,15 @@ import time
 import re
 import requests
 from bs4 import BeautifulSoup as bs, Comment
+import telegram
+from multiprocessing import Pool
 import cx_Oracle
 import os
+import sys
 import logging
+import urllib
+import chardet
+import cgi
 import uuid
 
 os.environ['NLS_LANG'] = '.UTF8'  # UnicodeEncodeError
@@ -21,6 +27,8 @@ logger = logging.getLogger('utility')
 logger.setLevel(logging.DEBUG)
 
 streamHandler = logging.StreamHandler()
+# fomatter = logging.Formatter('[%(levelname)s|%(filename)s:%(lineno)s] %(asctime)s > %(message)s')
+# streamHandler.setFormatter(fomatter)
 
 logger.addHandler(streamHandler)
 
@@ -28,10 +36,13 @@ logger.addHandler(streamHandler)
 # """ 날짜를 검증합니다 """
 def valid_date(date_str, date_fm):
     if date_str is None or re.search('[0-9]+', date_str, re.DOTALL) is None:  # 숫자가 없으면 return None
-        logger.debug('########## 날짜에 숫자가 없습니다 : %s' % date_str)
-        return None
+        raise Exception('날짜에 숫자가 없습니다 : %s' % date_str)
+        # logger.debug('########## 날짜에 숫자가 없습니다 : %s' % date_str)
     if date_fm in ('DD/nYY.MM', '|YYYY-MM-DD', '작성일YYYY-MM-DD'):  # 불규칙한 날짜를 보완 (과학기술정보통신부, 국가수리과학연구소)
-        date_str = modify_date(date_str, date_fm)
+        try:
+            date_str = modify_date(date_str, date_fm)
+        except Exception as e:
+            raise Exception(e)
     else:
         date_str = date_str.strip().replace(',', '-').replace('.', '-').replace('/', '-')
         # 마지막 '-' 삭제
@@ -48,27 +59,26 @@ def valid_date(date_str, date_fm):
     # datetime 객체로 변환
     try:
         date_time_str = datetime.datetime.strptime(date_str, '%Y-%m-%d')
-    except Exception:
-        logger.error('########## 날짜 양식에 문제가 있습니다 : %s' % date_str)
-        except_list.append({date_str: '########## 날짜 양식에 문제가 있습니다'})
-        raise Exception('def valid_date() : 날짜 양식에 문제가 있습니다 : %s' % date_str)
-        result = None
+    except:
+        raise Exception('날짜 양식에 문제가 있습니다 : %s' % date_str)
     else:
-        result = datetime.date(date_time_str.year, date_time_str.month, date_time_str.day)
-    finally:
-        return result
+        return datetime.date(date_time_str.year, date_time_str.month, date_time_str.day)
 
 
 # """ 글제목을 검증합니다 """
 def valid_title(title_str):
     if title_str is None:
         return ''
-    title_str = title_str.replace('새글', '').replace('New', '')\
-        .replace('[진행중]', '').replace('[입찰안내]', '').replace('[공고]', '').replace('[용역]', '') \
-        .replace('[입찰]', '').replace('제　목', '').replace('새 글', '')
-    title_str = title_str.strip()
-    title_str = title_str.replace('  ', '').replace('\t', '').replace('\n', '')
-    return title_str
+    try:
+        title_str = title_str.replace('새글', '').replace('New', '')\
+            .replace('[진행중]', '').replace('[입찰안내]', '').replace('[공고]', '').replace('[용역]', '') \
+            .replace('[입찰]', '').replace('제　목', '').replace('새 글', '')
+        title_str = title_str.strip()
+        title_str = title_str.replace('  ', '').replace('\t', '').replace('\n', '')
+    except:
+        raise Exception('글제목을 정제하는데 실패하였습니다')
+    else:
+        return title_str
 
 
 # """ 전일 날짜를 구합니다 """
@@ -99,98 +109,46 @@ def yesterday_check(day_list, board_date):
     return result
 
 
-# """ 공고 크롤링 정보를 select 합니다 """
-def select_TUN_WEB_CRLN_CNDTN(db_info):
-
-    conn = cx_Oracle.connect(db_info['ID'], db_info['PWD'], db_info['IP'] + ':' + db_info['PORT'] + '/' + db_info['SID'])
-    cursor = conn.cursor()
-
-    # UID를 시퀀스로 조회한다
-    SELECT_QUERY = "select W.WEB_CRLN_ID, W.DEPT_NM, W.ORG_NM, W.BD_NM, W.URL, W.USE_YN, W.ETC_1, W.ETC_2, " \
-                   "W.ELMT_TR_CSS_INF, W.ELMT_TITLE_CSS_INF, W.ELMT_RO_REG_DT_CSS_INF, (select cd_NM from TCO_CD_DTL " \
-                   "where W.ELMT_RO_REG_DT_TYP_CD = CD_DTL_ID) AS ELMT_RO_REG_DT_TYP_CD, W.ELMT_SLNM_CSS_INF, " \
-                   "W.ELMT_RO_URL_CSS_INF, W.ELMT_RO_TITLE_CSS_INF, W.ELMT_RO_BDTXT_CSS_INF, " \
-                   "W.ELMT_RO_START_DT_CSS_INF, W.ELMT_RO_END_DT_CSS_INF, (select cd_NM from TCO_CD_DTL where " \
-                   "W.ELMT_RO_START_END_DT_TYP_CD = CD_DTL_ID) AS ELMT_RO_START_END_DT_TYP_CD, " \
-                   "W.ELMT_RO_FILE_NM_CSS_INF, W.ELMT_RO_FILE_URL_CSS_INF, W.REMARKS from TUN_WEB_CRLN_CNDTN W ORDER BY W.WEB_CRLN_ID"
+# """ csv파일을 읽습니다 """
+def csv_read_url(src):
+    url_dict_list = []
     try:
-        cursor.prepare(SELECT_QUERY)
-        cursor.execute(None, '')
-        select_list = cursor.fetchall()
-
-        url_dict_list = []
-        for info in select_list:
-            url_dict = {
-                'SEED_ID': info[0],
-                '부처': info[1],
-                '기관': info[2],
-                '게시판명': info[3],
-                'URL': info[4],
-                'USE_YN': info[5],
-                'ETC_1': '' if info[6] is None else info[6],
-                'ETC_2': '' if info[7] is None else info[7],
-                'TR': info[8],
-                'Title': info[9],
-                'Date': info[10],
-                'DateFormat': '' if info[11] is None else info[11],
-                'ClickCSS': '' if info[12] is None else info[12],
-                'content_url': '' if info[13] is None else info[13],
-                'content_Title': info[14],
-                'content_Body': info[15],
-                'content_StartDate': info[16],
-                'content_EndDate': info[17],
-                'content_DateFormat': info[18],
-                'content_Files': info[19],
-                'content_File_url':  '' if info[20] is None else info[20]
-            }
+        csv_reader = csv.DictReader(open(src, encoding='UTF8'))
+        url_field_names = csv_reader.fieldnames
+        for row in csv_reader.reader:
+            url_dict = {}
+            for ii, h in enumerate(url_field_names):
+                url_dict[h] = row[ii].strip()
             url_dict_list.append(url_dict)
-    except:
-        raise Exception('# Query failed : %s' % SELECT_QUERY)
-
-    cursor.close()
-    conn.close()
-    return url_dict_list
+    except Exception as e:
+        raise Exception(e)
+    else:
+        return url_dict_list
 
 
-# """" 공고 크롤링 타이틀 키워드 필터링 리스트를 select 합니다 """
-def select_TUN_WEB_CRLN_KWD(db_info):
-
-    conn = cx_Oracle.connect(db_info['ID'], db_info['PWD'],db_info['IP'] + ':' + db_info['PORT'] + '/' + db_info['SID'])
-    cursor = conn.cursor()
-
+# """" 타이틀 키워드 필터링 리스트 csv파일을 불러옵니다 """
+def csv_read_keyword(src):
+    keyword_list = {}
     try:
-        # search_keyword 를 select 한다
-        SELECT_QUERY = "select K.KWD from TUN_WEB_CRLN_KWD K LEFT JOIN TCO_CD_DTL C ON K.KWD_TYP_CD = C.CD_DTL_ID where K.USE_YN = 'Y' and C.CD_NM = 'search_keyword' ORDER BY K.KWD_ID"
-        cursor.execute(SELECT_QUERY)
-        search_keywords = cursor.fetchall()
+        csv_reader = csv.DictReader(open(src, encoding='UTF-8'))
+        field_names = csv_reader.fieldnames
 
-        # ignore_keyword 를 select 한다
-        SELECT_QUERY = "select K.KWD from TUN_WEB_CRLN_KWD K LEFT JOIN TCO_CD_DTL C ON K.KWD_TYP_CD = C.CD_DTL_ID where K.USE_YN = 'Y' and C.CD_NM = 'ignore_keyword' ORDER BY K.KWD_ID"
-        cursor.execute(SELECT_QUERY)
-        ignore_keywords = cursor.fetchall()
-
-        search_keyword_list = []
-        ignore_keyword_list = []
-        for k in search_keywords:
-            search_keyword_list.append(k[0])
-        for k in ignore_keywords:
-            ignore_keyword_list.append(k[0])
-
-        keyword_list = {'search_keyword': search_keyword_list,
-            'ignore_keyword': ignore_keyword_list}
-    except:
-        raise Exception('# Query failed : %s' % SELECT_QUERY)
-
-    cursor.close()
-    conn.close()
-    return keyword_list
+        for fn in field_names:
+            result_list = []
+            keyword_list[fn] = result_list
+        for row in csv_reader.reader:
+            for index, field_name in enumerate(field_names):
+                if '' != row[index]:
+                    keyword_list[field_name].append(row[index])
+    except Exception as e:
+        raise Exception(e)
+    else:
+        return keyword_list
 
 
 # """" 부처별 불규칙한 날짜를 보완하여 (str)Date 반환 """
 def modify_date(date_str, date_fm):
     result = ''
-    if date_fm is None:
-        return result
     try:
         # 과학기술정보통신부
         if 'DD/nYY.MM' == date_fm:
@@ -210,10 +168,12 @@ def modify_date(date_str, date_fm):
             result = ''
 
     except Exception:
-        logger.error('########## 날짜 수정에 실패 하였습니다 : %s' % result)
-        except_list.append({result: '########## 날짜 수정에 실패 하였습니다'})
-        result = ''
-    finally:
+        raise Exception('날짜 수정에 실패 하였습니다 : %s' % result)
+        # logger.error('########## 날짜 수정에 실패 하였습니다 : %s' % result)
+        # except_list.append({result: '########## 날짜 수정에 실패 하였습니다'})
+        # result = ''
+        # print('result :', result)
+    else:
         return result
 
 
@@ -224,11 +184,12 @@ def valid_a_href(url, href):
         result = href
     else:
         result = url + href
+
     return result
 
 
 # """" 공고 게시판 내용을 가져옵니다 Dict 타입으로 반환 """
-def get_board_content(content_url, csv_info, wc_company_dict):
+def get_board_content(content_url, csv_info, wc_company_dict, html=None):
     select_list = [
         csv_info['content_Title'],
         csv_info['content_WriteDate'],
@@ -238,27 +199,33 @@ def get_board_content(content_url, csv_info, wc_company_dict):
         csv_info['content_Files'],
         csv_info['SEED_ID']
     ]
-    if 'verify=False' == csv_info['ETC_2']:
-        req = requests.get(content_url, verify=False)
-    else:
-        req = requests.get(content_url)
-    # etc_1 열
-    if 'utf-8' == csv_info['ETC_1']:
-        req.encoding = 'utf-8'
-    elif 'euc-kr' == csv_info['ETC_1']:
-        req.encoding = 'euc-kr'
-    html = req.text
+    if html is None:
+        print('html is None')
+        if 'verify=False' == csv_info['etc_2']:
+            req = requests.get(content_url, verify=False)
+        else:
+            req = requests.get(content_url)
+        # etc_1 열
+        if 'utf-8' == csv_info['etc_1']:
+            req.encoding = 'utf-8'
+        elif 'euc-kr' == csv_info['etc_1']:
+            req.encoding = 'euc-kr'
+        html = req.text
 
     soup = bs(html, 'lxml')
 
+    # print(html)
     result_list = []
     for index, css_select in enumerate(select_list):
         try:
-            if css_select is not None and '' != css_select:  # csv파일 공백
+            if '' != css_select and 'NoData' != css_select:  # csv파일 공백
                 # content_Title
                 if index == 0:
-                    html = soup.select_one(css_select).text
-                # content_StartDate, content_EndDate
+                    if 'trTitle' != css_select:
+                        html = soup.select_one(css_select).text
+                    else:
+                        html = csv_info['trTitle']
+                        # content_StartDate, content_EndDate
                 elif index in (2,3):
                     if 2 == index and 'content_WriteDate' == css_select:  # 공고일을 공고 시작일로 한다
                         html = csv_info['content_WriteDate']
@@ -287,6 +254,8 @@ def get_board_content(content_url, csv_info, wc_company_dict):
                 elif index == 5:
                     if 'onclick' != css_select and 'ajax' != css_select and 'javascript' != css_select:
                         file_list = soup.select(css_select)
+                        # print('file_list css_select :',css_select)
+                        # print('file_list :',file_list)
                         for i2, f in enumerate(file_list):
                             file_dict = {'file_name': f.text.strip(), 'url': valid_a_href(csv_info['content_File_url'], f.get('href'))}
                             file_list[i2] = file_dict
@@ -303,11 +272,12 @@ def get_board_content(content_url, csv_info, wc_company_dict):
         finally:
             result_list.append(html)
 
+    # print(result_list)
     content = {'seed_id': csv_info['SEED_ID'],
                'title': valid_title(result_list[0]),
                'url': content_url,
                'dept_cd': csv_info['부처'],
-               'wc_company_name': wc_company_dict[csv_info['부처']],
+               'wc_company_name': csv_info['부처'],
                'wc_ro_dpt_name': csv_info['기관'],
                'write_date': csv_info['content_WriteDate'],
                'start_date': result_list[2],
@@ -327,16 +297,16 @@ def get_board_content_selenium(board_url, onclick, csv_info, wc_company_dict):
     try:
         driver.get(board_url)
         time.sleep(5)
-        print('onclick : ', onclick)
+        logger.debug('onclick : %s' % onclick)
         css_click = 'a[onclick="%s"' % onclick
-        print('css_click :', css_click)
+        logger.debug('css_click : %s' % css_click)
         driver.find_element_by_css_selector(css_click).click()
-        print('driver.current_url :',driver.current_url)
+        logger.debug('driver.current_url : %s' % driver.current_url)
         time.sleep(5)
 
         html = driver.page_source
-        rnd_content = get_board_content('', csv_info, wc_company_dict, html)
-        print(rnd_content)
+        rnd_content = get_board_content(driver.current_url, csv_info, wc_company_dict, html)
+        logger.debug(rnd_content)
     except TimeoutException as e:
         logger.error('########## Selenium 작동이 중지 되었습니다 : %s' % e)
         html = ''
@@ -372,18 +342,17 @@ def sselenium_headless_read_board(csv_info):
             time.sleep(5)
         html = driver.page_source
     except TimeoutException as e:
-        logger.error('########## Selenium 작동이 중지 되었습니다 : %s' % e)
-        except_list.append({csv_info['기관']: '########## Selenium 작동이 중지 되었습니다 %s' % e})
-        html = ''
-    except Exception as e:
-        logger.error('########## Selenium 작동이 중지 되었습니다 : %s' % e)
-        except_list.append({csv_info['기관']: '########## Selenium 작동이 중지 되었습니다 %s' % e})
-        html = ''
-    finally:
-        # 브라우저 및 드라이버 종료
+        # logger.error('########## Selenium 작동이 중지 되었습니다 : %s' % e)
+        # except_list.append({csv_info['기관']: '########## Selenium 작동이 중지 되었습니다 %s' % e})
+        # html = ''
         driver.quit()
-        logger.debug('--- sselenium_headless QUIT !! ---')
-        return html
+        raise Exception('########## Selenium 작동이 중지 되었습니다')
+    except Exception as e:
+        # logger.error('########## Selenium 작동이 중지 되었습니다 : %s' % e)
+        # except_list.append({csv_info['기관']: '########## Selenium 작동이 중지 되었습니다 %s' % e})
+        # html = ''
+        driver.quit()
+        raise Exception('########## Selenium 작동이 중지 되었습니다')
 
 
 # """" 타이틀 키워드를 필터링 합니다 """
@@ -408,10 +377,11 @@ def get_except_list():
 
 # """" 공고 시작일, 마감일을 정제하여 반환합니다 """
 def valid_start_end_date(date_type, date_str, content_DateFormat):
-    logger.debug('date_type : %s, date_str : %s, content_DateFormat : %s' % (date_type, date_str, content_DateFormat))
+    # date_str = date_str.replace('\n','')
     if re.search('[0-9]+', date_str, re.DOTALL) is None:  # 숫자가 없으면 return ''
-        logger.debug('########## 숫자가 없습니다 : %s' % date_str)
-        return ''
+        raise Exception('날짜에 숫자가 없습니다 : %s' % date_str)
+        # logger.debug('########## 숫자가 없습니다 : %s' % date_str)
+        # return ''
     try:
         date_str = date_str.strip().replace('.','-').replace('/','-')
         date_str = re.sub('[^0-9~/시:\s-]', '', date_str)  # 2017-12-29~2018-01-03
@@ -432,7 +402,8 @@ def valid_start_end_date(date_type, date_str, content_DateFormat):
         result = valid_date(date_str, None).strftime('%Y-%m-%d')
     except Exception as e:
         raise Exception(e)
-    return result
+    else:
+        return result
 
 
 def insert_table_WC_CONTENT(rnd_content_list, db_info):
@@ -468,11 +439,6 @@ def insert_table_WC_CONTENT(rnd_content_list, db_info):
         INSET_QUERY = "insert into WC_CONTENT " \
                       "(WA_BBS_UID, WA_UID, WC_TITLE, WC_WRITER, WC_URL, WC_DT, WC_COLL_DT, WC_P_CONTENT, WC_KEYWORD_CODE, WC_COMPANY_NAME, COL3, COL4, TEXT_UID, WA_DB_VIEW, WC_MEM_ID, WC_RO_DPT_NAME) " \
                       "values (:1,:2,:3,:4,:5,TO_DATE(:6,'YYYY-MM-DD'),SYSDATE,:7,:8,:9,TO_DATE(:10,'YYYY-MM-DD'),TO_DATE(:11,'YYYY-MM-DD'),:12,:13,:14,:15)"
-        # not exists
-        # INSET_QUERY = "insert into WC_CONTENT " \
-        #               "(WA_BBS_UID, WA_UID, WC_TITLE, WC_WRITER, WC_URL, WC_DT, WC_COLL_DT, WC_P_CONTENT, WC_KEYWORD_CODE, WC_COMPANY_NAME, COL3, COL4, TEXT_UID, WA_DB_VIEW, WC_MEM_ID, WC_RO_DPT_NAME) " \
-        #               "select :1,:2,:3,:4,:5,TO_DATE(:6,'YYYY-MM-DD'),SYSDATE,:7,:8,:9,TO_DATE(:10,'YYYY-MM-DD'),TO_DATE(:11,'YYYY-MM-DD'),:12,:13,:14,:15 from dual" \
-        #               "where not exists (select WC_TITLE from WC_CONTENT where WC_TITLE = ':3')"
         try:
             cursor.execute(INSET_QUERY, insert_item)
         except:
@@ -481,20 +447,21 @@ def insert_table_WC_CONTENT(rnd_content_list, db_info):
             insert_count += 1
             conn.commit()
             # logger.debug('info commit()')
-            # logger.debug(rnd_content['files'])
+            # print(rnd_content['files'])
             if rnd_content['files']:
                 insert_table_WC_FILE(rnd_content['files'], WA_UID, conn, WA_BBS_UID)
 
     logger.debug('%s개의 공고가 성공적으로 INSERT 되었습니다.' % insert_count)
     cursor.close()
+    # print('cursor.close()')
     conn.close()
-
+    # print('conn.close()')
     return insert_count
 
 
 def insert_table_WC_FILE(file_list, WA_UID, conn, WA_BBS_UID2):
-    # logger.debug('=== insert_table_WC_FILE ==========================================')
-    # logger.debug(file_list)
+    # print('=== insert_table_WC_FILE ==========================================')
+    # print(file_list)
     cursor = conn.cursor()
 
     insert_items = []
@@ -511,12 +478,9 @@ def insert_table_WC_FILE(file_list, WA_UID, conn, WA_BBS_UID2):
 
         # 파일명 확장자 이후 데이터 정제
         file_name = file['file_name']
-        for k in ('.hwp','.hml','.zip','.pdf','.jpg','.png','.gif','.hwt','.xlsx','.doc','.xls'):
+        for k in ('.hwp','.hml','.zip','.pdf','.jpg','.png','.gif','.hwt'):
             if file_name.find(k) > 2:
-                if k == '.xlsx':
-                    file_name = file_name[:file_name.find(k) + 5]
-                else:
-                    file_name = file_name[:file_name.find(k) + 4]
+                file_name = file_name[:file_name.find(k) + 4]
         if '' == file_name:
             file_name = 'download'
 
@@ -526,7 +490,6 @@ def insert_table_WC_FILE(file_list, WA_UID, conn, WA_BBS_UID2):
         WF_FILE_NUM = index + 1  # 파일순서
         WF_FILE_PATH = uid_file_name  # 난수의 파일명
         WF_FILE_DIRE = download_path + uid_file_name  # 저장된 경로+파일명 upload/boardun/931565f7-74c7-4efb-83e3-eafe832504cb(WF_FILE_PATH값과동일)
-        # WA_BBS_UID = 999  # 999 Master코드
         WA_BBS_UID = WA_BBS_UID2  # 999 Master코드
         WF_FILE_NAME = file_name  # 원본 파일명 (3.+과업설명서.hwp)
         TEXT_UID = WF_UID  # 첨부문서UID
@@ -534,6 +497,7 @@ def insert_table_WC_FILE(file_list, WA_UID, conn, WA_BBS_UID2):
 
         insert_items.append((WF_UID, WA_BBS_PHY_NUM, WF_BBS_PHY_TYPE, WF_FILE_NUM, WF_FILE_PATH, WF_FILE_DIRE, WA_BBS_UID, WF_FILE_NAME, TEXT_UID, WF_SIZE))
 
+    # print(insert_items)
     INSET_QUERY = "insert into WC_FILE " \
                   "(WF_UID, WA_BBS_PHY_NUM, WF_BBS_PHY_TYPE, WF_FILE_NUM, WF_FILE_PATH, WF_FILE_DIRE, WA_BBS_UID, WF_FILE_NAME, TEXT_UID, WF_SIZE) " \
                   "values (:1,:2,:3,:4,:5,:6,:7,:8,:9,:10)"
@@ -549,15 +513,17 @@ def insert_table_WC_FILE(file_list, WA_UID, conn, WA_BBS_UID2):
             raise Exception('# Query failed : %s' % INSET_QUERY)
         finally:
             conn.commit()
+            # logger.debug('file commit()')
     logger.debug('%s개의 파일 정보가 성공적으로 INSERT 되었습니다.' % insert_count)
+    # print('cursor.close()')
     cursor.close()
 
 
 def get_WC_COMPANY_NAME(db_info):
-    conn = cx_Oracle.connect(db_info['ID'], db_info['PWD'], db_info['IP'] + ':' + db_info['PORT'] + '/' + db_info['SID'])
-    cursor = conn.cursor()
-
     try:
+        conn = cx_Oracle.connect(db_info['ID'], db_info['PWD'], db_info['IP'] + ':' + db_info['PORT'] + '/' + db_info['SID'])
+        cursor = conn.cursor()
+
         SELECT_QUERY = "select CD_DTL_ID, CD_NM from TCO_CD_DTL where CD_ID = 400"
         cursor.execute(SELECT_QUERY)
 
@@ -567,14 +533,16 @@ def get_WC_COMPANY_NAME(db_info):
         for item in select_list:
             wc_company_list[item[1]] = item[0]
     except:
-        raise Exception('# Query failed : %s' % SELECT_QUERY)
+        raise Exception('WC_COMPANY_NAME Query failed : %s' % SELECT_QUERY)
+    else:
+        return wc_company_list
+    finally:
+        cursor.close()
+        conn.close()
+        logger.debug('cursor.close() conn.close()')
 
-    cursor.close()
-    conn.close()
-    return wc_company_list
 
-
-def insert_table_WC_LOG(seed_id, rnd_count, db_info, msg=''):
+def insert_table_WC_LOG(seed_id, rnd_count, db_info):
     conn = cx_Oracle.connect(db_info['ID'], db_info['PWD'], db_info['IP'] + ':' + db_info['PORT'] + '/' + db_info['SID'])
     cursor = conn.cursor()
 
@@ -584,7 +552,7 @@ def insert_table_WC_LOG(seed_id, rnd_count, db_info, msg=''):
 
         WM_BBS_UID = cursor.fetchone()[0]
         WL_URL = seed_id
-        WL_LOGS = msg  # 에러 메세지
+        WL_LOGS = ''  # 첨부문서UID
         WL_INS_COUNT = rnd_count
 
         insert_item = (WM_BBS_UID, WL_URL, WL_LOGS, WL_INS_COUNT)
@@ -592,12 +560,13 @@ def insert_table_WC_LOG(seed_id, rnd_count, db_info, msg=''):
                       "(WM_BBS_UID, WL_URL, WL_LOGS, WL_INS_DT, WL_INS_COUNT) " \
                       "values (:1,:2,:3,SYSDATE, :4)"
         cursor.execute(INSET_QUERY, insert_item)
-    except:
-        raise Exception('# Query failed : %s' % INSET_QUERY)
-    finally:
         conn.commit()
-    cursor.close()
-    conn.close()
+    except:
+        raise Exception('insert_table_WC_LOG Query failed : %s' % INSET_QUERY)
+    finally:
+        cursor.close()
+        conn.close()
+        logger.debug('cursor.close() conn.close()')
 
 
 # """ 물리 파일을 저장한다 """
@@ -607,15 +576,14 @@ def file_download(file_info,download_path):
     }
 
     url = file_info['url'].replace('%20', ' ')
-
-    logger.debug('file_download url : %s' % url)
+    print('file_download url :',url)
 
     response = requests.get(url, stream=True)
 
     file_name = file_info['uid_file_name']
     file_path = download_path + file_name
 
-    logger.debug('file_path : %s' % file_path)
+    print('file_path :', file_path)
 
     directory = os.path.dirname(file_path)  # 폴더경로만 반환한다
     if not os.path.exists(directory):
@@ -626,10 +594,55 @@ def file_download(file_info,download_path):
     for chunk in response.iter_content(chunk_size=1024):
         if chunk:
             f.write(chunk)
-
     f.close()
     time.sleep(1)
     file_size = os.path.getsize(file_path)
 
     return file_size
 
+
+def write_board_selenium(content):
+    options = webdriver.ChromeOptions()
+    options.add_argument("--start-maximized")
+    driver = webdriver.Chrome('./chromedriver', chrome_options=options)
+
+    driver.get('http://www.ntis.go.kr/ThMain.do')
+    driver.find_element_by_name('userid').send_keys('hoon1234')
+    driver.find_element_by_name('password').send_keys('gate4fkd!!')
+    driver.find_element_by_name('password').submit()
+
+    driver.get('http://www.ntis.go.kr/rndgate/eg/un/ra/createForm.do')
+    time.sleep(3)
+
+    dept_cd = content['dept_cd']  # 부처명
+    wc_company_name = content['wc_company_name']  # 공고기관명
+    wc_title = content['title']
+    wc_url = content['url']
+    wc_dt = content['write_date']
+    ro_strt_dt = content['start_date']
+    ro_end_dt = content['end_date']
+    body = content['body']
+
+    driver.find_element_by_css_selector('#roFormCd > option[value="28802"]').click()  # 공고형태
+    el = driver.find_element_by_name('deptCd')
+    for option in el.find_elements_by_tag_name('option'):
+        if dept_cd == option.text:
+            option.click()  # select() in earlier versions of webdriver
+            break
+    driver.find_element_by_name('wcCompanyName').send_keys(wc_company_name)
+    driver.find_element_by_name('wcTitle').send_keys(wc_title)
+    driver.find_element_by_name('wcUrl').send_keys(wc_url)
+    driver.execute_script('document.getElementsByName("wcDt")[0].removeAttribute("readonly")')
+    driver.find_element_by_name('wcDt').send_keys(wc_dt)
+    driver.execute_script('document.getElementsByName("roStrtDt")[0].removeAttribute("readonly")')
+    driver.find_element_by_name('roStrtDt').send_keys(ro_strt_dt)
+    driver.execute_script('document.getElementsByName("roEndDt")[0].removeAttribute("readonly")')
+    driver.find_element_by_name('roEndDt').send_keys(ro_end_dt)
+    time.sleep(2)
+
+    # driver.find_element_by_css_selector('.se2_inputarea').send_keys('send_keys')  # 공고형태
+    driver.find_element_by_css_selector('#smart_editor2_content .se2_to_html').click()  # 공고형태
+
+    # driver.execute_script('document.getElementById("#smart_editor2_content")')
+    # driver.find_element_by_css_selector('#smart_editor2_content body').send_keys(body)
+    # driver.find_element_by_css_selector('#smart_editor2_content body').send_keys(body)
