@@ -298,10 +298,12 @@ def get_board_content_selenium(board_url, onclick, csv_info, wc_company_dict):
 
         driver.get(board_url)
         time.sleep(5)
-
         if 'onclickCSSClick' == csv_info['content_url']:
+            click_css_list = []
             if ',' in csv_info['ClickCSS']:
                 click_css_list = csv_info['ClickCSS'].split(',')
+            else:
+                click_css_list.append(csv_info['ClickCSS'])
             for css in click_css_list:
                 driver.find_element_by_css_selector(css).click()
                 time.sleep(5)
@@ -343,9 +345,11 @@ def sselenium_headless_read_board(csv_info):
     try:
         driver.get(csv_info['URL'])
         time.sleep(5)
-        click_css_list = {}
+        click_css_list = []
         if ',' in csv_info['ClickCSS']:
             click_css_list = csv_info['ClickCSS'].split(',')
+        else:
+            click_css_list.append(csv_info['ClickCSS'])
         for css in click_css_list:
             driver.find_element_by_css_selector(css).click()
             time.sleep(5)
