@@ -348,7 +348,7 @@ def sselenium_headless_read_board(csv_info):
         click_css_list = []
         if ',' in csv_info['ClickCSS']:
             click_css_list = csv_info['ClickCSS'].split(',')
-        else:
+        elif '' != csv_info['ClickCSS']:
             click_css_list.append(csv_info['ClickCSS'])
         for css in click_css_list:
             driver.find_element_by_css_selector(css).click()
