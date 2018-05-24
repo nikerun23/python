@@ -72,10 +72,10 @@ def print_RnD(csv_info, yesterday_list, keyword_list, wc_company_dict):
             board_date = util.valid_date(date_list.text, date_format)  # datetime객체로 반환
 
             # 전일 공고만 출력
-            # if util.yesterday_check(yesterday_list, board_date):
-            #     if util.get_keyword_title(title, keyword_list):
+            if util.yesterday_check(yesterday_list, board_date):
+                if util.get_keyword_title(title, keyword_list):
                     # print("%s %s" % (title, board_date))  # 결과 데이터 라인
-                    # logger.info("%s %s" % (title.replace('\xad','').replace('\xa0','').replace('\u200b','').replace('\u2024',''), board_date))  # 결과 데이터 라인
+                    logger.info("%s %s" % (title.replace('\xad','').replace('\xa0','').replace('\u200b','').replace('\u2024',''), board_date))  # 결과 데이터 라인
 
             # util.get_board_content_selenium(title,url,select_title)
 
@@ -90,16 +90,16 @@ def print_RnD(csv_info, yesterday_list, keyword_list, wc_company_dict):
             #             logger.debug('============================================================')
 
             # if util.yesterday_check(yesterday_list, board_date):
-            if util.get_keyword_title(title, keyword_list):
-                if 'onclick' in content_url:  # 제목 링크에 onclick 존재할 경우만
+            # if util.get_keyword_title(title, keyword_list):
+            #     if 'onclick' in content_url:  # 제목 링크에 onclick 존재할 경우만
             #     if 'onclick' in title_list.attrs:  # 제목 링크에 onclick 존재할 경우만
-                    onclick = title_list.attrs['onclick']
-                    csv_info['content_WriteDate'] = board_date.strftime('%Y-%m-%d')  # 공고 작성일
-                    csv_info['trTitle'] = title
-                    rnd_content = util_v0.get_board_content_selenium(url, onclick, csv_info, wc_company_dict)
-                    logger.debug('onclick 가 있습니다 = %s' % title_list.attrs['onclick'])
-                    title_href = onclick[onclick.find("'")+1:onclick.rfind("'")]
-                    logger.debug(content_url+title_href)
+            #         onclick = title_list.attrs['onclick']
+            #         csv_info['content_WriteDate'] = board_date.strftime('%Y-%m-%d')  # 공고 작성일
+            #         csv_info['trTitle'] = title
+            #         rnd_content = util_v0.get_board_content_selenium(url, onclick, csv_info, wc_company_dict)
+            #         logger.debug('onclick 가 있습니다 = %s' % title_list.attrs['onclick'])
+            #         title_href = onclick[onclick.find("'")+1:onclick.rfind("'")]
+            #         logger.debug(content_url+title_href)
 
         except Exception as e:
             logger.error(e)
@@ -134,10 +134,10 @@ if __name__ == '__main__':
 
         url_dict_list = util_v0.csv_read_url('csv/url_list - google.csv')
         keyword_list = util_v0.csv_read_keyword('csv/search_keyword.csv')
-        wc_company_dict = None
+        wc_company_dict = {'소방방재청': '400051', '지식경제부': '400071', '농림수산식품부': '400072', '문화체육관광부': '400073', '국토해양부': '400074', '교육과학기술부': '400075', '보건복지부': '400025', '기타': '400001', '교육인적자원부': '400014', '방위사업청': '400018', '행정안전부': '400019', '과학기술부': '400020', '문화관광부': '400021', '농림부': '400022', '산업자원부': '400023', '정보통신부': '400024', '환경부': '400026', '노동부': '400027', '건설교통부': '400029', '해양수산부': '400030', '기상청': '400043', '농촌진흥청': '400045', '산림청': '400046', '중소기업청': '400047', '식품의약품안전처': '400049', '문화재청': '400050', '기 타': '400099', '국무총리실': '400077', '국가청소년위원회': '400091', '원자력안전위원회': '400092', '방송통신위원회': '400080', '기획재정부': '400079', '경찰청': '400081', '공정거래위원회': '400082', '국방부': '400083', '법무부': '400084', '법제처': '400085', '여성부': '400086', '외교통상부': '400087', '통일부': '400088', '해양경찰청': '400089', '행정중심복합도시건설': '400090', '국가과학기술위원회': '400078', '고용노동부': '400060', '관세청': '400061', '과학기술정보통신부': '400062', '교육부': '400063', '국무조정실': '400064', '조달청': '400065', '국토교통부': '400066', '농림축산식품부': '400067', '산업통상자원부': '400068', '소방청': '400069', '여성가족부': '400070', '외교부': '400052', '국세청': '400053', '인사혁신처': '400054', '통계청': '400055', '중소벤처기업부': '400056', '특허청': '400057', '범부처 사업': '400058'}
 
         yesterday_list = util.get_yesterday_list()
-        # yesterday_list = [datetime.date(2018, 5, 3),datetime.date(2018, 5, 4),datetime.date(2018, 5, 5),datetime.date(2018, 5, 6),datetime.date(2018, 5, 7)]        # yesterday_list = [datetime.date(2018, 3, 9), datetime.date(2018, 3, 10), datetime.date(2018, 3, 11)]
+        # yesterday_list = [datetime.date(2018, 5, 21),datetime.date(2018, 5, 22)]
         logger.debug(keyword_list)
 
         def print_list(start_row,end_row,ignore=999):
@@ -159,7 +159,7 @@ if __name__ == '__main__':
             logger.debug(crawler_info['URL'])
             print_RnD(url_dict_list[row_num], yesterday_list, keyword_list, wc_company_dict)
 
-        print_list(4,4,999)  # 인자로 rowNum을 주면 제외하고 크롤링
+        print_list(2,130,999)  # 인자로 rowNum을 주면 제외하고 크롤링
         # print_test(59)  # SEED_ID 200뒷번호
     except Exception as e:
         logger.debug('==========================================================')
