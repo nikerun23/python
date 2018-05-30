@@ -10,18 +10,18 @@ import http
 import datetime
 
 def print_RnD(csv_info, yesterday_list, keyword_list, wc_company_dict):
-    if 'X' == csv_info['Crawler']:  # Crawler
+    if 'N' == csv_info['USE_YN']:  # Crawler
         logger.debug('X --- 크롤링 제외 ------------------------')
         return None
-    seed_id = csv_info['SEED_ID']
+    seed_id = csv_info['WEB_CRLN_ID']
     url = csv_info['URL']
     select_tr = csv_info['TR']
     select_title = csv_info['Title']
     select_date = csv_info['Date']
-    etc_1_str = csv_info['etc_1']
-    etc_2_str = csv_info['etc_2']
+    etc_1_str = csv_info['ETC_1']
+    etc_2_str = csv_info['ETC_2']
     date_format = csv_info['DateFormat']
-    content_url = csv_info['a_href']
+    content_url = csv_info['content_url']
     html = ''
 
     if 'Ajax' == etc_1_str:  # Selenium
@@ -69,6 +69,7 @@ def print_RnD(csv_info, yesterday_list, keyword_list, wc_company_dict):
             title = util.valid_title(title_list.text)
             date_list = tr.select_one(select_date)
             board_date = util.valid_date(date_list.text, date_format)  # datetime객체로 반환
+
             # 전일 공고만 출력
             if util.yesterday_check(yesterday_list, board_date):
                 if util.get_keyword_title(title, keyword_list):
@@ -112,7 +113,7 @@ if __name__ == '__main__':
     logger.setLevel(logging.DEBUG)
 
     streamHandler = logging.StreamHandler()
-    fileHandler = logging.FileHandler('./log/test.log')
+    # fileHandler = logging.FileHandler('./log/test.log')
 
     # log_format = '[%(asctime)s]:%(levelname)-7s:%(message)s'
     # time_format = '%H:%M:%S'
@@ -123,18 +124,31 @@ if __name__ == '__main__':
     # logger.addHandler(fileHandler)
 
     try:
+        # 운영 DB
+        real_db_info = {'ID': "kistep",
+                  'PWD': "dhQkWkd8",
+                   'IP': "203.250.234.204",
+                   'PORT': "1252",
+                   'SID': "SNTIS"}
+        # 개발 DB
+        db_info = {'ID': "kistep",
+                   'PWD': "dhQkWkd8",
+                   'IP': "112.216.140.126",
+                   'PORT': "1522",
+                   'SID': "orcl"}
         url_dict_list = util.csv_read_url('csv/url_list - google.csv')
-        keyword_list = util.csv_read_keyword('csv/search_keyword.csv')
-        db_info = util.csv_read_url('csv/DB_info.csv')[1]  # DB 접속 정보 0: 운영, 1: dev
-        wc_company_dict = util.get_WC_COMPANY_NAME(db_info)
-        yesterday_list = util.get_yesterday_list()
-        # yesterday_list = [datetime.date(2018, 4, 30),datetime.date(2018, 5, 1)]        # yesterday_list = [datetime.date(2018, 3, 9), datetime.date(2018, 3, 10), datetime.date(2018, 3, 11)]
+        # url_dict_list = util.select_TUN_WEB_CRLN_CNDTN(db_info)
+        keyword_list = util.select_TUN_WEB_CRLN_KWD(real_db_info)
+        wc_company_dict = util.get_WC_COMPANY_NAME(real_db_info)
+
+        # yesterday_list = util.get_yesterday_list()
+        yesterday_list = [datetime.date(2018, 5, 3),datetime.date(2018, 5, 4),datetime.date(2018, 5, 5),datetime.date(2018, 5, 6),datetime.date(2018, 5, 7)]        # yesterday_list = [datetime.date(2018, 3, 9), datetime.date(2018, 3, 10), datetime.date(2018, 3, 11)]
         logger.debug(keyword_list)
 
-        def print_list(ignore=999):
-            for index, crawler_info in enumerate(url_dict_list):
-                logger.debug('csv Row Num : %s' % (index + 2))
-                if ignore == (index + 2):
+        def print_list(start_row,end_row,ignore=999):
+            for row_num, crawler_info in enumerate(url_dict_list):
+                logger.debug('csv Row Num : %s' % (row_num + 2))
+                if ignore == (row_num) or not(start_row <= row_num and row_num <= end_row):
                     continue
                 logger.debug('%s - %s --- %s ---------------------------------------' % (crawler_info['SEED_ID'], crawler_info['부처'], crawler_info['기관']))
                 logger.debug(crawler_info['URL'])
@@ -142,19 +156,19 @@ if __name__ == '__main__':
 
 
         def print_test(row_num):
-            row_num = row_num - 2  # index 값 보정
+            row_num = row_num - 1  # index 값 보정
             crawler_info = url_dict_list[row_num]
             logger.debug('%s - %s --- %s ---------------------------------------' % (
             crawler_info['SEED_ID'], crawler_info['부처'], crawler_info['기관']))
             logger.debug(crawler_info['URL'])
             print_RnD(url_dict_list[row_num], yesterday_list, keyword_list, wc_company_dict)
 
-        print_list()  # 인자로 rowNum을 주면 제외하고 크롤링
-        # print_test(8)
+        print_list(2,130,999)  # 인자로 rowNum을 주면 제외하고 크롤링
+        # print_test(59)  # SEED_ID 200뒷번호
     except Exception as e:
-        print('==========================================================')
-        print(e)
-        print('==========================================================')
+        logger.debug('==========================================================')
+        logger.debug(e)
+        logger.debug('==========================================================')
     logger.debug('예외발생 : %s' % util.get_except_list())
     logger.debug('++++++++++++++++++++++ 조회 완료 ++++++++++++++++++++++')
 
