@@ -1,6 +1,6 @@
 import unittest
 import datetime
-import rnd_crawler.utility as util
+import rnd_crawler.utility_v1 as util
 
 
 class UtillityTestCase(unittest.TestCase):
@@ -33,7 +33,10 @@ class UtillityTestCase(unittest.TestCase):
             '2017.1.1 12:00',
             '2017.1.1 2:00',
             '2017.1.1 2시',
-            ' 2017-01-01 12시 '
+            ' 2017-01-01 12시 ',
+            '2017-01-01 12시마감 ',
+            '2017-01-01 12시 마감',
+            '2017-1-1 마감'
         ]
         for dt in date_temp:
             self.assertEqual(datetime.date, util.valid_date(dt, None).__class__)
