@@ -55,6 +55,7 @@ def valid_date(date_str, date_fm):
             date_str = date_str[:date_str.find(':')-2]
         if '시' in date_str:  # HH시 포함되어 있을 경우 제거
             date_str = date_str[:date_str.find('시')-2]
+        date_str = re.sub('[^0-9-]', '', date_str)  # 숫자,- 만 추출
         date_str = date_str.strip().replace(' ', '')
     # datetime 객체로 변환
     try:
