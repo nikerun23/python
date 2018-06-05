@@ -19,13 +19,14 @@ import re
 # body_text = "공모기간 : 2018. 1. 22(월) ~ 1.29(월)"
 # body_text = "가. 입찰 제안서 제출마감 일시 및 장소 : 2018.4.26.(목) 17:00 환경부 운영지원과(6동 604호)"
 # body_text = "- 제출마감일: '18.4.27(금), 18:00"
+# body_text = "입찰마감 일시 : 2018. 5. 2. 14:00 까지"
 body_text = "제출기한 : 2018. 04. 28. (토) 14:00까지"
 
 
 # """" 공고 시작일, 마감일을 정제하여 반환합니다 """
 def valid_start_end_date(date_type, date_str, content_DateFormat):
     # date_str = date_str.replace('\n','')
-    if re.match('(.*)[0-9]+', date_str, re.DOTALL) is None:  # 숫자가 없으면 return ''
+    if re.match('(.*)[0-9]+', date_str, re.DOTALL):  # 숫자가 없으면 return ''
         print('########## 숫자가 없습니다 :',date_str)
         return ''
     date_str = date_str.strip().replace('.','-').replace('/','-')
