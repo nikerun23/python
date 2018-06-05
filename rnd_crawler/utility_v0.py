@@ -299,6 +299,8 @@ def get_board_content_selenium(board_url, onclick, csv_info, wc_company_dict):
 
         driver.get(board_url)
         time.sleep(5)
+
+        logger.debug('onclick : %s' % onclick)
         if 'onclickCSSClick' == csv_info['content_url']:
             click_css_list = []
             if ',' in csv_info['ClickCSS']:
@@ -308,9 +310,11 @@ def get_board_content_selenium(board_url, onclick, csv_info, wc_company_dict):
             for css in click_css_list:
                 driver.find_element_by_css_selector(css).click()
                 time.sleep(5)
+        elif 'onclick' == csv_info['content_url']:
+            css_click = 'a[onclick="%s"' % onclick # a[onclick=
+        elif 'href=javascript' == csv_info['content_url']:
+            css_click = 'a[href="%s"' % onclick  # a[href=
 
-        logger.debug('onclick : %s' % onclick)
-        css_click = 'a[onclick="%s"' % onclick
         logger.debug('css_click : %s' % css_click)
         driver.find_element_by_css_selector(css_click).click()
         logger.debug('driver.current_url : %s' % driver.current_url)

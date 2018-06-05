@@ -92,15 +92,25 @@ def print_RnD(csv_info, yesterday_list, keyword_list, wc_company_dict):
             # if util.yesterday_check(yesterday_list, board_date):
             # if util.get_keyword_title(title, keyword_list):
             #     if 'onclick' in content_url:  # 제목 링크에 onclick 존재할 경우만
-            #     if 'onclick' in title_list.attrs:  # 제목 링크에 onclick 존재할 경우만
-            #         onclick = title_list.attrs['onclick']
-            #         csv_info['content_WriteDate'] = board_date.strftime('%Y-%m-%d')  # 공고 작성일
-            #         csv_info['trTitle'] = title
-            #         rnd_content = util_v0.get_board_content_selenium(url, onclick, csv_info, wc_company_dict)
-            #         logger.debug('onclick 가 있습니다 = %s' % title_list.attrs['onclick'])
-            #         title_href = onclick[onclick.find("'")+1:onclick.rfind("'")]
-            #         logger.debug(content_url+title_href)
+                # if 'onclick' in title_list.attrs:  # 제목 링크에 onclick 존재할 경우만
+                #     onclick = title_list.attrs['onclick']
+                #     csv_info['content_WriteDate'] = board_date.strftime('%Y-%m-%d')  # 공고 작성일
+                #     csv_info['trTitle'] = title
+                #     rnd_content = util_v0.get_board_content_selenium(url, onclick, csv_info, wc_company_dict)
+                    # logger.debug('onclick 가 있습니다 = %s' % title_list.attrs['onclick'])
+                    # title_href = onclick[onclick.find("'")+1:onclick.rfind("'")]
+                    # logger.debug(content_url+title_href)
 
+            if util.get_keyword_title(title, keyword_list):
+                if 'href=javascript' in content_url:  # 제목 링크에 href=javascript 존재할 경우만
+                    print(content_url)
+                    onclick = title_list.attrs['href']
+                    csv_info['content_WriteDate'] = board_date.strftime('%Y-%m-%d')  # 공고 작성일
+                    csv_info['trTitle'] = title
+                    rnd_content = util_v0.get_board_content_selenium(url, onclick, csv_info, wc_company_dict)
+                    # logger.debug('href=javascript 가 있습니다 = %s' % title_list.attrs['href=javascript'])
+            #         title_href = href[href.find("'")+1:href.rfind("'")]
+            #         logger.debug(content_url)
         except Exception as e:
             logger.error(e)
             logger.error('########## Exception Error PASS !!')
@@ -159,7 +169,7 @@ if __name__ == '__main__':
             logger.debug(crawler_info['URL'])
             print_RnD(url_dict_list[row_num], yesterday_list, keyword_list, wc_company_dict)
 
-        print_list(2,130,999)  # 인자로 rowNum을 주면 제외하고 크롤링
+        print_list(14,14,999)  # 인자로 rowNum을 주면 제외하고 크롤링
         # print_test(59)  # SEED_ID 200뒷번호
     except Exception as e:
         logger.debug('==========================================================')
