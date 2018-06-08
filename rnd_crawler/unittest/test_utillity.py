@@ -41,6 +41,7 @@ class UtillityTestCase(unittest.TestCase):
         for dt in date_temp:
             self.assertEqual(datetime.date, util.valid_date(dt, None).__class__)
             print(util.valid_date(dt, None))
+        self.assertIsNone(util.valid_date('마감일', None))
         self.assertIsNone(util.valid_date('    ', None))
         self.assertIsNone(util.valid_date('''  
             
