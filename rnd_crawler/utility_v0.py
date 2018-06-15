@@ -301,8 +301,10 @@ def get_board_content_selenium(board_url, onclick, csv_info, wc_company_dict):
         time.sleep(5)
 
         logger.debug('onclick : %s' % onclick)
+        css_click = ''
         if 'onclickCSSClick' == csv_info['content_url']:
             click_css_list = []
+            css_click = 'a[onclick="%s"' % onclick  # a[onclick=
             if ',' in csv_info['ClickCSS']:
                 click_css_list = csv_info['ClickCSS'].split(',')
             else:
