@@ -336,9 +336,9 @@ def get_board_content_selenium(board_url, onclick, csv_info, wc_company_dict):
         return html
 
 
-def sselenium_headless_read_board(csv_info):
+def selenium_headless_read_board(csv_info):
     # 크롬 옵션 추가하기
-    logger.debug('--- sselenium_headless START !! ---')
+    logger.debug('--- selenium_headless START !! ---')
     options = webdriver.ChromeOptions()
     options.add_argument('--headless')  # 헤드리스모드
     options.add_argument('--disable-gpu')  # 호환성용 (필요없는 경우도 있음)

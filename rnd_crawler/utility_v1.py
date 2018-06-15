@@ -52,8 +52,8 @@ def valid_date(date_str, date_fm):
     except Exception:
         logger.error('########## 날짜 양식에 문제가 있습니다 : %s' % date_str)
         except_list.append({date_str: '########## 날짜 양식에 문제가 있습니다'})
-        raise Exception('def valid_date() : 날짜 양식에 문제가 있습니다 : %s' % date_str)
         result = None
+        raise Exception('def valid_date() : 날짜 양식에 문제가 있습니다 : %s' % date_str)
     else:
         result = datetime.date(date_time_str.year, date_time_str.month, date_time_str.day)
     finally:
@@ -358,9 +358,9 @@ def get_board_content_selenium(board_url, onclick, csv_info, wc_company_dict):
         return html
 
 
-def sselenium_headless_read_board(csv_info):
+def selenium_headless_read_board(csv_info):
     # 크롬 옵션 추가하기
-    logger.debug('--- sselenium_headless START !! ---')
+    logger.debug('--- selenium_headless START !! ---')
     options = webdriver.ChromeOptions()
     options.add_argument('--headless')  # 헤드리스모드
     options.add_argument('--disable-gpu')  # 호환성용 (필요없는 경우도 있음)
@@ -394,7 +394,7 @@ def sselenium_headless_read_board(csv_info):
     finally:
         # 브라우저 및 드라이버 종료
         driver.quit()
-        logger.debug('--- sselenium_headless QUIT !! ---')
+        logger.debug('--- selenium_headless QUIT !! ---')
         return html
 
 
@@ -602,7 +602,7 @@ def insert_table_WC_LOG(seed_id, rnd_count, db_info, msg=''):
         insert_item = (WM_BBS_UID, WL_URL, WL_LOGS, WL_INS_COUNT)
         INSET_QUERY = "insert into WC_LOG " \
                       "(WM_BBS_UID, WL_URL, WL_LOGS, WL_INS_DT, WL_INS_COUNT) " \
-                      "values (:1,:2,:3,SYSDATE, :4)"
+                      "values (:1, :2, :3, SYSDATE, :4)"
         cursor.execute(INSET_QUERY, insert_item)
     except:
         raise Exception('# Query failed : %s' % INSET_QUERY)
