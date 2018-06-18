@@ -95,7 +95,7 @@ def print_RnD(csv_info, yesterday_list, keyword_list, wc_company_dict):
                     onclick = title_list.attrs['href']
                     csv_info['trTitle'] = title
                     rnd_content = util.get_board_content_selenium(url, onclick, csv_info, wc_company_dict)
-                    logger.debug('href=javascript 가 있습니다 = %s' % title_list.attrs['href=javascript'])
+                    logger.debug('href=javascript 가 있습니다 = %s' % title_list.attrs['href'])
                     rnd_content_list.append(rnd_content)
 
         except Exception as e:
@@ -146,7 +146,7 @@ if __name__ == '__main__':
             logger.debug(crawler_info['URL'])
             print_RnD(url_dict_list[row_num], yesterday_list, keyword_list, wc_company_dict)
 
-        print_list(1,1,999)  # 인자로 rowNum을 주면 제외하고 크롤링
+        print_list(15,15,999)  # 인자로 rowNum을 주면 제외하고 크롤링
         # print_test(59)  # SEED_ID 200뒷번호
     except Exception as e:
         logger.debug('==========================================================')
