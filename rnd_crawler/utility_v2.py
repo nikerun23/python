@@ -222,7 +222,7 @@ def valid_a_href(url, href):
 
 
 # """" 공고 게시판 내용을 가져옵니다 Dict 타입으로 반환 """
-def get_board_content(content_url, csv_info, wc_company_dict):
+def get_board_content(content_url, csv_info, wc_company_dict, html=None):
     select_list = [
         csv_info['content_Title'],
         csv_info['content_WriteDate'],
@@ -232,26 +232,29 @@ def get_board_content(content_url, csv_info, wc_company_dict):
         csv_info['content_Files'],
         csv_info['SEED_ID']
     ]
-    if 'verify=False' == csv_info['ETC_2']:
-        req = requests.get(content_url, verify=False)
-    else:
-        req = requests.get(content_url)
-    # etc_1 열
-    if 'utf-8' == csv_info['ETC_1']:
-        req.encoding = 'utf-8'
-    elif 'euc-kr' == csv_info['ETC_1']:
-        req.encoding = 'euc-kr'
-    html = req.text
-
+    if html is None:
+        if 'verify=False' == csv_info['ETC_2']:
+            req = requests.get(content_url, verify=False)
+        else:
+            req = requests.get(content_url)
+        # etc_1 열
+        if 'utf-8' == csv_info['ETC_1']:
+            req.encoding = 'utf-8'
+        elif 'euc-kr' == csv_info['ETC_1']:
+            req.encoding = 'euc-kr'
+        html = req.text
     soup = bs(html, 'lxml')
 
     result_list = []
     for index, css_select in enumerate(select_list):
         try:
-            if css_select is not None and '' != css_select:  # csv파일 공백
+            if '' != css_select and 'NoData' != css_select:  # csv파일 공백
                 # content_Title
                 if index == 0:
-                    html = soup.select_one(css_select).text
+                    if 'trTitle' != css_select:
+                        html = soup.select_one(css_select).text
+                    else:
+                        html = csv_info['trTitle']
                 # content_StartDate, content_EndDate
                 elif index in (2,3):
                     if 2 == index and 'content_WriteDate' == css_select:  # 공고일을 공고 시작일로 한다
