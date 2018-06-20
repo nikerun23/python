@@ -72,34 +72,23 @@ def print_RnD(csv_info, yesterday_list, keyword_list, wc_company_dict):
             csv_info['content_WriteDate'] = board_date.strftime('%Y-%m-%d')  # 공고 작성일rnd_content_list.append(rnd_content)
 
             # if util.yesterday_check(yesterday_list, board_date):
-            if util.get_keyword_title(title, keyword_list):
-                if 'href' in title_list.attrs and board_date is not None:  # 제목 링크에 href가 존재할 경우만
-                    if 'http' in content_url[:7]:
-                        title_url = util.valid_a_href(content_url,title_list.get('href'))
-                        rnd_content = util.get_board_content(title_url, csv_info, wc_company_dict)
-                        logger.debug(rnd_content)
-                        logger.debug('============================================================')
-                        rnd_content_list.append(rnd_content)
-
-            if util.get_keyword_title(title, keyword_list):
-                if 'onclick' == content_url or 'onclickCSSClick' == content_url:  # 제목 링크에 onclick 존재할 경우만
-                    attrs = 'onclick'
-                    onclick = title_list.attrs[attrs]
-                    csv_info['trTitle'] = title  # 공고내용이 없을시에 제목으로 대체
-                    csv_info['content_WriteDate'] = board_date.strftime('%Y-%m-%d')  # 공고 작성일
+            if util.get_keyword_title(title, keyword_list) and board_date is not None:
+                csv_info['trTitle'] = title  # 공고내용이 없을시에 제목으로 대체
+                csv_info['content_WriteDate'] = board_date.strftime('%Y-%m-%d')  # 공고 작성일
+                if 'http' in content_url[:7]:
+                    title_url = util.valid_a_href(content_url,title_list.get('href'))
+                    rnd_content = util.get_board_content(title_url, csv_info, wc_company_dict)
+                else:
+                    onclick = None
+                    if 'onclick' == content_url or 'onclickCSSClick' == content_url:  # 제목 링크에 onclick 존재할 경우만
+                        onclick = title_list.attrs['onclick']
+                    elif 'href=javascript' == content_url:
+                        onclick = title_list.attrs['href']
+                    logger.debug('%s 가 있습니다' % content_url)
                     rnd_content = util.get_board_content_selenium(url, onclick, csv_info, wc_company_dict)
-                    logger.debug('onclick 가 있습니다 = %s' % title_list.attrs['onclick'])
-                    rnd_content_list.append(rnd_content)
-            if util.get_keyword_title(title, keyword_list):
-                if 'href=javascript' == content_url:
-                    attrs = 'href'
-                    onclick = title_list.attrs[attrs]
-                    csv_info['trTitle'] = title  # 공고내용이 없을시에 제목으로 대체
-                    csv_info['content_WriteDate'] = board_date.strftime('%Y-%m-%d')  # 공고 작성일
-                    rnd_content = util.get_board_content_selenium(url, onclick, csv_info, wc_company_dict)
-                    logger.debug('href=javascript 가 있습니다 = %s' % title_list.attrs['href'])
-                    rnd_content_list.append(rnd_content)
-
+                logger.debug(rnd_content)
+                logger.debug('============================================================')
+                rnd_content_list.append(rnd_content)
         except Exception as e:
             logger.error(e)
             logger.error('########## Exception Error PASS !!')
@@ -144,7 +133,7 @@ if __name__ == '__main__':
                     logger.error(e)
                     pass
 
-        print_list(15,15,999)  # 인자로 rowNum을 주면 제외하고 크롤링
+        print_list(3,3,999)  # 인자로 rowNum을 주면 제외하고 크롤링
     except Exception as e:
         logger.debug('==========================================================')
         logger.debug(e)
