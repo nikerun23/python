@@ -235,7 +235,7 @@ def get_board_content(content_url, csv_info, wc_company_dict):
     result_list = []
     for index, css_select in enumerate(select_list):
         try:
-            if '' != css_select and 'NoData' != css_select:  # csv파일 공백
+            if css_select is not None and '' != css_select and 'NoData' != css_select:  # csv파일 공백
                 # content_Title
                 if index == 0:
                     html = soup.select_one(css_select).text
