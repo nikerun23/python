@@ -83,17 +83,19 @@ def print_RnD(csv_info, yesterday_list, keyword_list, wc_company_dict):
 
             if util.get_keyword_title(title, keyword_list):
                 if 'onclick' == content_url or 'onclickCSSClick' == content_url:  # 제목 링크에 onclick 존재할 경우만
-                # if 'onclick' in title_list.attrs:  # 제목 링크에 onclick 존재할 경우만
-                    onclick = title_list.attrs['onclick']
-                    csv_info['trTitle'] = title
+                    attrs = 'onclick'
+                    onclick = title_list.attrs[attrs]
+                    csv_info['trTitle'] = title  # 공고내용이 없을시에 제목으로 대체
+                    csv_info['content_WriteDate'] = board_date.strftime('%Y-%m-%d')  # 공고 작성일
                     rnd_content = util.get_board_content_selenium(url, onclick, csv_info, wc_company_dict)
                     logger.debug('onclick 가 있습니다 = %s' % title_list.attrs['onclick'])
                     rnd_content_list.append(rnd_content)
-
             if util.get_keyword_title(title, keyword_list):
-                if 'href=javascript' == content_url:  # 제목 링크에 href=javascript 존재할 경우만
-                    onclick = title_list.attrs['href']
-                    csv_info['trTitle'] = title
+                if 'href=javascript' == content_url:
+                    attrs = 'href'
+                    onclick = title_list.attrs[attrs]
+                    csv_info['trTitle'] = title  # 공고내용이 없을시에 제목으로 대체
+                    csv_info['content_WriteDate'] = board_date.strftime('%Y-%m-%d')  # 공고 작성일
                     rnd_content = util.get_board_content_selenium(url, onclick, csv_info, wc_company_dict)
                     logger.debug('href=javascript 가 있습니다 = %s' % title_list.attrs['href'])
                     rnd_content_list.append(rnd_content)
@@ -129,25 +131,20 @@ if __name__ == '__main__':
 
         def print_list(start_row, end_row, ignore=999):
             for row_num, crawler_info in enumerate(url_dict_list):
-                row_num = row_num + 2
-                logger.debug('csv Row Num : %s' % (row_num))
-                if ignore == row_num or not(start_row <= row_num and row_num <= end_row):
-                    continue
-                logger.debug('%s - %s --- %s ---------------------------------------' % (crawler_info['SEED_ID'], crawler_info['부처'], crawler_info['기관']))
-                logger.debug(crawler_info['URL'])
-                print_RnD(crawler_info, yesterday_list, keyword_list, wc_company_dict)
-
-
-        def print_test(row_num):
-            row_num = row_num - 1  # index 값 보정
-            crawler_info = url_dict_list[row_num]
-            logger.debug('%s - %s --- %s ---------------------------------------' % (
-            crawler_info['SEED_ID'], crawler_info['부처'], crawler_info['기관']))
-            logger.debug(crawler_info['URL'])
-            print_RnD(url_dict_list[row_num], yesterday_list, keyword_list, wc_company_dict)
+                try:
+                    row_num = row_num + 2
+                    logger.debug('csv Row Num : %s' % (row_num))
+                    if ignore == row_num or not(start_row <= row_num and row_num <= end_row):
+                        continue
+                    logger.debug('%s - %s --- %s ---------------------------------------' % (crawler_info['SEED_ID'], crawler_info['부처'], crawler_info['기관']))
+                    logger.debug(crawler_info['URL'])
+                    print_RnD(crawler_info, yesterday_list, keyword_list, wc_company_dict)
+                except Exception as e:
+                    logger.error('print_list() Exception !!')
+                    logger.error(e)
+                    pass
 
         print_list(15,15,999)  # 인자로 rowNum을 주면 제외하고 크롤링
-        # print_test(59)  # SEED_ID 200뒷번호
     except Exception as e:
         logger.debug('==========================================================')
         logger.debug(e)
