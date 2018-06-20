@@ -248,7 +248,7 @@ def get_board_content(content_url, csv_info, wc_company_dict, html=None):
     result_list = []
     for index, css_select in enumerate(select_list):
         try:
-            if '' != css_select and 'NoData' != css_select:  # csv파일 공백
+            if css_select is not None and '' != css_select and 'NoData' != css_select:  # csv파일 공백
                 # content_Title
                 if index == 0:
                     if 'trTitle' != css_select:
@@ -282,7 +282,7 @@ def get_board_content(content_url, csv_info, wc_company_dict, html=None):
                             html = html.replace('src="/', src)
                 # content_Files
                 elif index == 5:
-                    if 'onclick' != css_select and 'ajax' != css_select and 'javascript' != css_select:
+                    if '' != css_select and 'onclick' != css_select and 'ajax' != css_select and 'javascript' != css_select:
                         file_list = soup.select(css_select)
                         for i2, f in enumerate(file_list):
                             file_dict = {'file_name': f.text.strip(), 'url': valid_a_href(csv_info['content_File_url'], f.get('href'))}
@@ -314,13 +314,59 @@ def get_board_content(content_url, csv_info, wc_company_dict, html=None):
     return content
 
 
+def selenium_headless_read_board(csv_info):
+    # 크롬 옵션 추가하기
+    logger.debug('--- selenium_headless START !! ---')
+    options = webdriver.ChromeOptions()
+    options.add_argument('--headless')  # 헤드리스모드
+    options.add_argument('--disable-gpu')  # 호환성용 (필요없는 경우도 있음)
+    options.add_argument('--window-size=1920x1080')  # (가상)화면 크기 조절
+    # 크롬 모바일 버전으로 User Agent 설정하기
+    options.add_argument("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36")
+    # 크롬 Options를 넣어준 Headless 모드 크롬
+    driver = webdriver.Chrome('./chromedriver', chrome_options=options)
+    driver.set_page_load_timeout(60)  # selenium timeout 60초
+
+    try:
+        driver.get(csv_info['URL'])
+        time.sleep(5)
+        click_css_list = []
+        if ',' in csv_info['ClickCSS']:
+            click_css_list = csv_info['ClickCSS'].split(',')
+        elif '' != csv_info['ClickCSS']:
+            click_css_list.append(csv_info['ClickCSS'])
+        for css in click_css_list:
+            driver.find_element_by_css_selector(css).click()
+            time.sleep(5)
+        html = driver.page_source
+    except TimeoutException as e:
+        logger.error('########## Selenium 작동이 중지 되었습니다 : %s' % e)
+        raise Exception(e)
+    except Exception as e:
+        logger.error('########## Selenium 작동이 중지 되었습니다 : %s' % e)
+        raise Exception(e)
+    else:
+        return html
+    finally:
+        # 브라우저 및 드라이버 종료
+        driver.quit()
+        logger.debug('--- selenium_headless QUIT !! ---')
+
+
 # """" Selenium을 이용하여 (str)Html 반환 """
 def get_board_content_selenium(board_url, onclick, csv_info, wc_company_dict):
     options = webdriver.ChromeOptions()
+
+    # 헤드리스모드
+    options.add_argument('--headless')
+    options.add_argument('--disable-gpu')  # 호환성용 (필요없는 경우도 있음)
+    options.add_argument('--window-size=1920x1080')  # (가상)화면 크기 조절
+    options.add_argument("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36")
+
     options.add_argument("--disable-extensions")
     options.add_argument("--start-maximized")
     driver = webdriver.Chrome('./chromedriver', chrome_options=options)
-    driver.set_page_load_timeout(60)  # selenium timeout 60초
+    driver.set_page_load_timeout(120)  # selenium timeout 60초
     try:
 
         driver.get(board_url)
@@ -361,45 +407,6 @@ def get_board_content_selenium(board_url, onclick, csv_info, wc_company_dict):
         return html
     finally:
         driver.close()
-
-
-def selenium_headless_read_board(csv_info):
-    # 크롬 옵션 추가하기
-    logger.debug('--- selenium_headless START !! ---')
-    options = webdriver.ChromeOptions()
-    options.add_argument('--headless')  # 헤드리스모드
-    options.add_argument('--disable-gpu')  # 호환성용 (필요없는 경우도 있음)
-    options.add_argument('--window-size=1920x1080')  # (가상)화면 크기 조절
-    # 크롬 모바일 버전으로 User Agent 설정하기
-    options.add_argument("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36")
-    # 크롬 Options를 넣어준 Headless 모드 크롬
-    driver = webdriver.Chrome('./chromedriver', chrome_options=options)
-    driver.set_page_load_timeout(60)  # selenium timeout 60초
-
-    try:
-        driver.get(csv_info['URL'])
-        time.sleep(5)
-        click_css_list = []
-        if ',' in csv_info['ClickCSS']:
-            click_css_list = csv_info['ClickCSS'].split(',')
-        elif '' != csv_info['ClickCSS']:
-            click_css_list.append(csv_info['ClickCSS'])
-        for css in click_css_list:
-            driver.find_element_by_css_selector(css).click()
-            time.sleep(5)
-        html = driver.page_source
-    except TimeoutException as e:
-        logger.error('########## Selenium 작동이 중지 되었습니다 : %s' % e)
-        raise Exception(e)
-    except Exception as e:
-        logger.error('########## Selenium 작동이 중지 되었습니다 : %s' % e)
-        raise Exception(e)
-    else:
-        return html
-    finally:
-        # 브라우저 및 드라이버 종료
-        driver.quit()
-        logger.debug('--- selenium_headless QUIT !! ---')
 
 
 # """" 타이틀 키워드를 필터링 합니다 """
@@ -449,59 +456,64 @@ def valid_start_end_date(date_type, date_str, content_DateFormat):
 
 
 def insert_table_WC_CONTENT(rnd_content_list, db_info):
-    conn = cx_Oracle.connect(db_info['ID'], db_info['PWD'], db_info['IP'] + ':' + db_info['PORT'] + '/' + db_info['SID'])
-    cursor = conn.cursor()
-
     insert_count = 0
-    for rnd_content in rnd_content_list:
+    try:
+        conn = cx_Oracle.connect(db_info['ID'], db_info['PWD'],
+                                 db_info['IP'] + ':' + db_info['PORT'] + '/' + db_info['SID'])
+        cursor = conn.cursor()
+        for rnd_content in rnd_content_list:
 
-        # UID를 시퀀스로 조회한다
-        UID_QUERY = "SELECT WC_CONTENT_PYTHON_SEQ.NEXTVAL FROM DUAL"
-        cursor.execute(UID_QUERY)
+            # UID를 시퀀스로 조회한다
+            UID_QUERY = "SELECT WC_CONTENT_PYTHON_SEQ.NEXTVAL FROM DUAL"
+            cursor.execute(UID_QUERY)
 
-        WA_UID = cursor.fetchone()[0]
-        WA_BBS_UID = rnd_content['seed_id']  # 마스터UID
-        WC_TITLE = rnd_content['title']  # 제목
-        WC_WRITER = ''  # 작성자
-        WC_URL = rnd_content['url']  # URL
-        WC_DT = '' if 'NoData' == rnd_content['write_date'] else rnd_content['write_date']  # 고유작성일 (공고등록일)
-        # WC_COLL_DT = 'SYSDATE'  # 수집일자
-        WC_P_CONTENT = rnd_content['body']  # 내용
-        WC_KEYWORD_CODE = '402001'  # 마스터분류코드 (공고 402001)
-        WC_COMPANY_NAME = rnd_content['wc_company_name']  # 공고기관명(부처ID)
-        COL3 = '' if 'NoData' == rnd_content['start_date'] else rnd_content['start_date']  # 공고일(접수 시작일)
-        COL4 = '' if 'NoData' == rnd_content['end_date'] else rnd_content['end_date']  # 접수마감일
-        TEXT_UID = WA_UID  # TEXT_UID
-        WA_DB_VIEW = 'Y'  # Y
-        WC_MEM_ID = '파이썬'  # 파이썬
-        WC_RO_DPT_NAME = rnd_content['wc_ro_dpt_name']  # 기관
+            WA_UID = cursor.fetchone()[0]
+            WA_BBS_UID = rnd_content['seed_id']  # 마스터UID
+            WC_TITLE = rnd_content['title']  # 제목
+            WC_WRITER = ''  # 작성자
+            WC_URL = rnd_content['url']  # URL
+            WC_DT = '' if 'NoData' == rnd_content['write_date'] else rnd_content['write_date']  # 고유작성일 (공고등록일)
+            # WC_COLL_DT = 'SYSDATE'  # 수집일자
+            WC_P_CONTENT = rnd_content['body']  # 내용
+            WC_KEYWORD_CODE = '402001'  # 마스터분류코드 (공고 402001)
+            WC_COMPANY_NAME = rnd_content['wc_company_name']  # 공고기관명(부처ID)
+            COL3 = '' if 'NoData' == rnd_content['start_date'] else rnd_content['start_date']  # 공고일(접수 시작일)
+            COL4 = '' if 'NoData' == rnd_content['end_date'] else rnd_content['end_date']  # 접수마감일
+            TEXT_UID = WA_UID  # TEXT_UID
+            WA_DB_VIEW = 'Y'  # Y
+            WC_MEM_ID = '파이썬'  # 파이썬
+            WC_RO_DPT_NAME = rnd_content['wc_ro_dpt_name']  # 기관
 
-        insert_item = (WA_BBS_UID, WA_UID, WC_TITLE, WC_WRITER, WC_URL, WC_DT, WC_P_CONTENT, WC_KEYWORD_CODE, WC_COMPANY_NAME, COL3, COL4, TEXT_UID, WA_DB_VIEW, WC_MEM_ID, WC_RO_DPT_NAME)
+            insert_item = (WA_BBS_UID, WA_UID, WC_TITLE, WC_WRITER, WC_URL, WC_DT, WC_P_CONTENT, WC_KEYWORD_CODE, WC_COMPANY_NAME, COL3, COL4, TEXT_UID, WA_DB_VIEW, WC_MEM_ID, WC_RO_DPT_NAME)
 
-        INSET_QUERY = "insert into WC_CONTENT " \
-                      "(WA_BBS_UID, WA_UID, WC_TITLE, WC_WRITER, WC_URL, WC_DT, WC_COLL_DT, WC_P_CONTENT, WC_KEYWORD_CODE, WC_COMPANY_NAME, COL3, COL4, TEXT_UID, WA_DB_VIEW, WC_MEM_ID, WC_RO_DPT_NAME) " \
-                      "values (:1,:2,:3,:4,:5,TO_DATE(:6,'YYYY-MM-DD'),SYSDATE,:7,:8,:9,TO_DATE(:10,'YYYY-MM-DD'),TO_DATE(:11,'YYYY-MM-DD'),:12,:13,:14,:15)"
-        # not exists
-        # INSET_QUERY = "insert into WC_CONTENT " \
-        #               "(WA_BBS_UID, WA_UID, WC_TITLE, WC_WRITER, WC_URL, WC_DT, WC_COLL_DT, WC_P_CONTENT, WC_KEYWORD_CODE, WC_COMPANY_NAME, COL3, COL4, TEXT_UID, WA_DB_VIEW, WC_MEM_ID, WC_RO_DPT_NAME) " \
-        #               "select :1,:2,:3,:4,:5,TO_DATE(:6,'YYYY-MM-DD'),SYSDATE,:7,:8,:9,TO_DATE(:10,'YYYY-MM-DD'),TO_DATE(:11,'YYYY-MM-DD'),:12,:13,:14,:15 from dual" \
-        #               "where not exists (select WC_TITLE from WC_CONTENT where WC_TITLE = ':3')"
-        try:
-            cursor.execute(INSET_QUERY, insert_item)
-        except:
-            raise Exception('# Query failed : %s' % INSET_QUERY)
-        else:
-            insert_count += 1
-            conn.commit()
-            # logger.debug('info commit()')
-            # logger.debug(rnd_content['files'])
-            if rnd_content['files']:
-                insert_table_WC_FILE(rnd_content['files'], WA_UID, conn, WA_BBS_UID)
+            INSET_QUERY = "insert into WC_CONTENT " \
+                          "(WA_BBS_UID, WA_UID, WC_TITLE, WC_WRITER, WC_URL, WC_DT, WC_COLL_DT, WC_P_CONTENT, WC_KEYWORD_CODE, WC_COMPANY_NAME, COL3, COL4, TEXT_UID, WA_DB_VIEW, WC_MEM_ID, WC_RO_DPT_NAME) " \
+                          "values (:1,:2,:3,:4,:5,TO_DATE(:6,'YYYY-MM-DD'),SYSDATE,:7,:8,:9,TO_DATE(:10,'YYYY-MM-DD'),TO_DATE(:11,'YYYY-MM-DD'),:12,:13,:14,:15)"
+            # not exists
+            # INSET_QUERY = "insert into WC_CONTENT " \
+            #               "(WA_BBS_UID, WA_UID, WC_TITLE, WC_WRITER, WC_URL, WC_DT, WC_COLL_DT, WC_P_CONTENT, WC_KEYWORD_CODE, WC_COMPANY_NAME, COL3, COL4, TEXT_UID, WA_DB_VIEW, WC_MEM_ID, WC_RO_DPT_NAME) " \
+            #               "select :1,:2,:3,:4,:5,TO_DATE(:6,'YYYY-MM-DD'),SYSDATE,:7,:8,:9,TO_DATE(:10,'YYYY-MM-DD'),TO_DATE(:11,'YYYY-MM-DD'),:12,:13,:14,:15 from dual" \
+            #               "where not exists (select WC_TITLE from WC_CONTENT where WC_TITLE = :3)"
 
-    logger.debug('%s개의 공고가 성공적으로 INSERT 되었습니다.' % insert_count)
-    cursor.close()
-    conn.close()
-
+            try:
+                cursor.execute(INSET_QUERY, insert_item)
+            except:
+                pass
+                # raise Exception('# Query failed : %s' % INSET_QUERY)
+            else:
+                insert_count += 1
+                conn.commit()
+                # logger.debug('info commit()')
+                # logger.debug(rnd_content['files'])
+                # 파일 정보 INSERT
+                if rnd_content['files']:
+                    insert_table_WC_FILE(rnd_content['files'], WA_UID, conn, WA_BBS_UID)
+    except:
+        raise Exception('# Query failed : %s' % INSET_QUERY)
+    finally:
+        logger.debug('%s개의 공고가 성공적으로 INSERT 되었습니다.' % insert_count)
+        cursor.close()
+        conn.close()
     return insert_count
 
 
