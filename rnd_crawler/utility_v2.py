@@ -75,9 +75,9 @@ def get_yesterday_list():
     yesterday_list = [yesterday]
 
     # yesterday가 일요일 경우 전 주 금요일까지 조회
-    if '일' == day_of_week[yesterday.weekday()]:
-        yesterday_list.append(yesterday - datetime.timedelta(days=1))
-        yesterday_list.append(yesterday - datetime.timedelta(days=2))
+    # if '일' == day_of_week[yesterday.weekday()]:
+    #     yesterday_list.append(yesterday - datetime.timedelta(days=1))
+    #     yesterday_list.append(yesterday - datetime.timedelta(days=2))
 
     logger.debug('전일 : %s %s' % (yesterday, day_of_week[yesterday.weekday()]))
     logger.debug('크롤링 날짜 : %s' % yesterday_list)
@@ -315,8 +315,8 @@ def get_board_content(content_url, csv_info, wc_company_dict, html=None):
 
 
 def selenium_headless_read_board(csv_info):
-    # 크롬 옵션 추가하기
     logger.debug('--- selenium_headless START !! ---')
+    # 크롬 옵션 추가하기
     options = webdriver.ChromeOptions()
     options.add_argument('--headless')  # 헤드리스모드
     options.add_argument('--disable-gpu')  # 호환성용 (필요없는 경우도 있음)
@@ -371,7 +371,6 @@ def get_board_content_selenium(board_url, onclick, csv_info, wc_company_dict):
 
         driver.get(board_url)
         time.sleep(5)
-
         logger.debug('onclick : %s' % onclick)
         css_click = ''
         if 'onclickCSSClick' == csv_info['content_url']:
@@ -389,14 +388,12 @@ def get_board_content_selenium(board_url, onclick, csv_info, wc_company_dict):
         elif 'href=javascript' == csv_info['content_url']:
             css_click = 'a[href="%s"' % onclick  # a[href=
 
-        logger.debug('css_click : %s' % css_click)
         driver.find_element_by_css_selector(css_click).click()
         logger.debug('driver.current_url : %s' % driver.current_url)
         time.sleep(5)
 
         html = driver.page_source
         rnd_content = get_board_content(driver.current_url, csv_info, wc_company_dict, html)
-        logger.debug(rnd_content)
     except TimeoutException as e:
         logger.error('########## Selenium 작동이 중지 되었습니다 : %s' % e)
         raise Exception(e)
@@ -404,7 +401,7 @@ def get_board_content_selenium(board_url, onclick, csv_info, wc_company_dict):
         logger.error('########## Selenium 작동이 중지 되었습니다 : %s' % e)
         raise Exception(e)
     else:
-        return html
+        return rnd_content
     finally:
         driver.close()
 
@@ -412,10 +409,8 @@ def get_board_content_selenium(board_url, onclick, csv_info, wc_company_dict):
 # """" 타이틀 키워드를 필터링 합니다 """
 def get_keyword_title(title, keyword_list):
     result = False
-
     search_keywords = keyword_list['search_keyword']
     ignore_keywords = keyword_list['ignore_keyword']
-
     for k in search_keywords:
         if k in title:
             result = True
@@ -494,7 +489,6 @@ def insert_table_WC_CONTENT(rnd_content_list, db_info):
             #               "(WA_BBS_UID, WA_UID, WC_TITLE, WC_WRITER, WC_URL, WC_DT, WC_COLL_DT, WC_P_CONTENT, WC_KEYWORD_CODE, WC_COMPANY_NAME, COL3, COL4, TEXT_UID, WA_DB_VIEW, WC_MEM_ID, WC_RO_DPT_NAME) " \
             #               "select :1,:2,:3,:4,:5,TO_DATE(:6,'YYYY-MM-DD'),SYSDATE,:7,:8,:9,TO_DATE(:10,'YYYY-MM-DD'),TO_DATE(:11,'YYYY-MM-DD'),:12,:13,:14,:15 from dual" \
             #               "where not exists (select WC_TITLE from WC_CONTENT where WC_TITLE = :3)"
-
             try:
                 cursor.execute(INSET_QUERY, insert_item)
             except:
@@ -509,7 +503,7 @@ def insert_table_WC_CONTENT(rnd_content_list, db_info):
                 if rnd_content['files']:
                     insert_table_WC_FILE(rnd_content['files'], WA_UID, conn, WA_BBS_UID)
     except:
-        raise Exception('# Query failed : %s' % INSET_QUERY)
+        raise Exception('# insert failed : %s' % INSET_QUERY)
     finally:
         logger.debug('%s개의 공고가 성공적으로 INSERT 되었습니다.' % insert_count)
         cursor.close()
@@ -562,7 +556,6 @@ def insert_table_WC_FILE(file_list, WA_UID, conn, WA_BBS_UID2):
     INSET_QUERY = "insert into WC_FILE " \
                   "(WF_UID, WA_BBS_PHY_NUM, WF_BBS_PHY_TYPE, WF_FILE_NUM, WF_FILE_PATH, WF_FILE_DIRE, WA_BBS_UID, WF_FILE_NAME, TEXT_UID, WF_SIZE) " \
                   "values (:1,:2,:3,:4,:5,:6,:7,:8,:9,:10)"
-
     insert_count = 0
     for row in insert_items:
         try:
@@ -571,8 +564,8 @@ def insert_table_WC_FILE(file_list, WA_UID, conn, WA_BBS_UID2):
             cursor.execute(INSET_QUERY, row)
             insert_count += 1
         except:
-            raise Exception('# Query failed : %s' % INSET_QUERY)
-        finally:
+            pass
+        else:
             conn.commit()
     logger.debug('%s개의 파일 정보가 성공적으로 INSERT 되었습니다.' % insert_count)
     cursor.close()
@@ -620,8 +613,9 @@ def insert_table_WC_LOG(seed_id, rnd_count, db_info, msg=''):
         cursor.execute(INSET_QUERY, insert_item)
     except:
         raise Exception('# Query failed : %s' % INSET_QUERY)
-    finally:
+    else:
         conn.commit()
+    finally:
         cursor.close()
         conn.close()
 
@@ -632,31 +626,33 @@ def file_download(file_info,download_path):
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36'
     }
 
+    file_size = 0
     url = file_info['url'].replace('%20', ' ')
-
     logger.debug('file_download url : %s' % url)
 
     response = requests.get(url, stream=True)
 
     file_name = file_info['uid_file_name']
     file_path = download_path + file_name
-
     logger.debug('file_path : %s' % file_path)
 
-    directory = os.path.dirname(file_path)  # 폴더경로만 반환한다
-    if not os.path.exists(directory):
-        os.makedirs(directory, exist_ok=True)  # exist_ok=True 상위 경로도 생성한다
+    try:
+        directory = os.path.dirname(file_path)  # 폴더경로만 반환한다
+        if not os.path.exists(directory):
+            os.makedirs(directory, exist_ok=True)  # exist_ok=True 상위 경로도 생성한다
 
-    f = open(file_path, "wb")
+        f = open(file_path, "wb")
 
-    for chunk in response.iter_content(chunk_size=1024):
-        if chunk:
-            f.write(chunk)
-
-    f.close()
-    time.sleep(1)
-    file_size = os.path.getsize(file_path)
-
+        for chunk in response.iter_content(chunk_size=1024):
+            if chunk:
+                f.write(chunk)
+    except:
+        raise FileExistsError()
+    else:
+        time.sleep(1)
+        file_size = os.path.getsize(file_path)
+    finally:
+        f.close()
     return file_size
 
 def get_except_list():
