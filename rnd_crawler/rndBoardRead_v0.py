@@ -34,9 +34,9 @@ def print_RnD(csv_info, yesterday_list, keyword_list, wc_company_dict):
         try:
             # etc_2 열
             if 'verify=False' == etc_2_str:
-                req = requests.get(url, verify=False)
+                req = requests.get(url=url, timeout=60, verify=False)
             else:
-                req = requests.get(url)
+                req = requests.get(url=url, timeout=60)
         except http.client.RemoteDisconnected as e:
             logger.error(e)
             logger.error('########## req.get RemoteDisconnected 예외발생 !!')
@@ -105,7 +105,7 @@ if __name__ == '__main__':
         wc_company_dict = {'소방방재청': '400051', '지식경제부': '400071', '농림수산식품부': '400072', '문화체육관광부': '400073', '국토해양부': '400074', '교육과학기술부': '400075', '보건복지부': '400025', '기타': '400001', '교육인적자원부': '400014', '방위사업청': '400018', '행정안전부': '400019', '과학기술부': '400020', '문화관광부': '400021', '농림부': '400022', '산업자원부': '400023', '정보통신부': '400024', '환경부': '400026', '노동부': '400027', '건설교통부': '400029', '해양수산부': '400030', '기상청': '400043', '농촌진흥청': '400045', '산림청': '400046', '중소기업청': '400047', '식품의약품안전처': '400049', '문화재청': '400050', '기 타': '400099', '국무총리실': '400077', '국가청소년위원회': '400091', '원자력안전위원회': '400092', '방송통신위원회': '400080', '기획재정부': '400079', '경찰청': '400081', '공정거래위원회': '400082', '국방부': '400083', '법무부': '400084', '법제처': '400085', '여성부': '400086', '외교통상부': '400087', '통일부': '400088', '해양경찰청': '400089', '행정중심복합도시건설': '400090', '국가과학기술위원회': '400078', '고용노동부': '400060', '관세청': '400061', '과학기술정보통신부': '400062', '교육부': '400063', '국무조정실': '400064', '조달청': '400065', '국토교통부': '400066', '농림축산식품부': '400067', '산업통상자원부': '400068', '소방청': '400069', '여성가족부': '400070', '외교부': '400052', '국세청': '400053', '인사혁신처': '400054', '통계청': '400055', '중소벤처기업부': '400056', '특허청': '400057', '범부처 사업': '400058'}
 
         yesterday_list = util.get_yesterday_list()
-        yesterday_list = [datetime.date(2018, 6, 11),datetime.date(2018, 6, 12),datetime.date(2018, 6, 14)]
+        # yesterday_list = [datetime.date(2018, 6, 18),datetime.date(2018, 6, 19)]
         logger.debug(keyword_list)
 
         def print_list(start_row,end_row,ignore=999):
@@ -118,7 +118,7 @@ if __name__ == '__main__':
                 logger.debug(crawler_info['URL'])
                 print_RnD(crawler_info, yesterday_list, keyword_list, wc_company_dict)
 
-        print_list(1,130,999)  # 인자로 rowNum을 주면 제외하고 크롤링
+        print_list(12,14,999)  # 인자로 rowNum을 주면 제외하고 크롤링
 
     except Exception as e:
         logger.debug('==========================================================')
