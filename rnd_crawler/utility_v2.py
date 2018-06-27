@@ -523,13 +523,18 @@ def insert_table_WC_FILE(file_list, WA_UID, conn, WA_BBS_UID2):
         cursor.execute(UID_QUERY)
 
         download_path = 'upload/boardun/'
-        uid_file_name = str(uuid.uuid4())
+        uid_file_name = str(uuid.uuid4())  #uid 생성
         file['uid_file_name'] = uid_file_name
 
         file_size = file_download(file, download_path)  # 물리파일 다운로드
 
         # 파일명 확장자 이후 데이터 정제
-        file_name = file['file_name']
+        file_name = ''
+        if '.' in file['file_name']:  # 파일명에 '.'이 없으면 URL에서 파일명 가져오기
+            file_name = file['file_name']
+        else:
+            file_name = file['url'][file['url'].rfind('/')+1:]
+            file_name = file_name.replace("%20", ' ')
         for k in ('.hwp','.hml','.zip','.pdf','.jpg','.png','.gif','.hwt','.xlsx','.doc','.xls'):
             if file_name.find(k) > 2:
                 if k == '.xlsx':
