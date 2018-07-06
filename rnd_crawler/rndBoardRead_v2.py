@@ -2,19 +2,19 @@
 
 import requests
 from bs4 import BeautifulSoup as bs
-import rnd_crawler.utility_v0 as util_v0
-import rnd_crawler.utility_v2 as util
+import rnd_crawler.utility_v1 as util
 import logging
 import logging.handlers
 from rnd_crawler import ColoredFormatter
 import http
 import datetime
+import cx_Oracle
 
 global except_list
 except_list = []
 
 def print_RnD(csv_info, yesterday_list, keyword_list, wc_company_dict):
-    if 'Y' != csv_info['USE_YN']:  # Crawler
+    if 'N' != csv_info['USE_YN']:  # Crawler
         logger.debug('X --- 크롤링 제외 ------------------------')
         return None
     seed_id = csv_info['SEED_ID']
@@ -29,23 +29,20 @@ def print_RnD(csv_info, yesterday_list, keyword_list, wc_company_dict):
     html = ''
 
     if 'Ajax' == etc_1_str:  # Selenium
-        # html = util.selenium_read_board(csv_info)
         html = util.selenium_headless_read_board(csv_info)
     else:
         try:
             # etc_2 열
             if 'verify=False' == etc_2_str:
-                req = requests.get(url, verify=False)
+                req = requests.get(url=url, timeout=60, verify=False)
             else:
-                req = requests.get(url)
+                req = requests.get(url=url, timeout=60)
         except http.client.RemoteDisconnected as e:
             logger.error(e)
             logger.error('########## req.get RemoteDisconnected 예외발생 !!')
-            raise Exception('req.get RemoteDisconnected 예외발생')
         except Exception as e:
             logger.error(e)
             logger.error('########## req.get Exception 예외발생 !!')
-            raise Exception('req.get Exception 예외발생 !!')
         else:
             # etc_1 열
             if 'utf-8' == etc_1_str:
@@ -53,7 +50,6 @@ def print_RnD(csv_info, yesterday_list, keyword_list, wc_company_dict):
             elif 'euc-kr' == etc_1_str:
                 req.encoding = 'euc-kr'
             html = req.text
-
     if '' == html:
         logger.error('########## HTML에 정보가 없습니다 !!')
         return None
@@ -62,33 +58,19 @@ def print_RnD(csv_info, yesterday_list, keyword_list, wc_company_dict):
     board_list = soup.select(select_tr)
 
     crawlwe_result = False
-    rnd_content_list = []
     for tr in board_list:
         try:
             title_list = tr.select_one(select_title)
             title = util.valid_title(title_list.text)
             date_list = tr.select_one(select_date)
             board_date = util.valid_date(date_list.text, date_format)  # datetime객체로 반환
-            csv_info['content_WriteDate'] = board_date.strftime('%Y-%m-%d')  # 공고 작성일rnd_content_list.append(rnd_content)
 
-            # if util.yesterday_check(yesterday_list, board_date):
-            if util.get_keyword_title(title, keyword_list) and board_date is not None:
-                csv_info['trTitle'] = title  # 공고내용이 없을시에 제목으로 대체
-                csv_info['content_WriteDate'] = board_date.strftime('%Y-%m-%d')  # 공고 작성일
-                if 'http' in content_url[:7]:
-                    title_url = util.valid_a_href(content_url,title_list.get('href'))
-                    rnd_content = util.get_board_content(title_url, csv_info, wc_company_dict)
-                else:
-                    onclick = None
-                    if 'onclick' == content_url or 'onclickCSSClick' == content_url:  # 제목 링크에 onclick 존재할 경우만
-                        onclick = title_list.attrs['onclick']
-                    elif 'href=javascript' == content_url:
-                        onclick = title_list.attrs['href']
-                    logger.debug('%s 가 있습니다' % content_url)
-                    rnd_content = util.get_board_content_selenium(url, onclick, csv_info, wc_company_dict)
-                logger.debug(rnd_content)
-                logger.debug('============================================================')
-                rnd_content_list.append(rnd_content)
+            # 전일 공고만 출력
+            if util.yesterday_check(yesterday_list, board_date):
+                if util.get_keyword_title(title, keyword_list):
+                    # print("%s %s" % (title, board_date))  # 결과 데이터 라인
+                    logger.info("%s %s" % (title.replace('\xad','').replace('\xa0','').replace('\u200b','').replace('\u2024',''), board_date))  # 결과 데이터 라인
+
         except Exception as e:
             logger.error(e)
             logger.error('########## Exception Error PASS !!')
@@ -98,7 +80,6 @@ def print_RnD(csv_info, yesterday_list, keyword_list, wc_company_dict):
     if not crawlwe_result:
         logger.debug('seed_id: %s 크롤링에 실패하였습니다' % seed_id)
     logger.debug('----------------------------------------------------------')
-    # logger.debug('%s ----------' % crawlwe_result)
 
 
 # +++++++++++ Main start +++++++++++++++++++++++++++++++++
