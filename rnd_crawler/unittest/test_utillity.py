@@ -1,9 +1,19 @@
 import unittest
 import datetime
-import rnd_crawler.utility_v1 as util
+import rnd_crawler.utility_v2 as util
 
 
 class UtillityTestCase(unittest.TestCase):
+
+    # 제목 정제 테스트
+    def test_title(self):
+        src_title = '2018년도「부천시 중소ㆍ중견기업 지원사업」 모집공고조회128'
+        result_title = '2018년도「부천시 중소ㆍ중견기업 지원사업」 모집공고'
+
+        self.assertEqual(result_title, util.valid_title(src_title))
+        self.assertEqual(result_title, util.valid_title(result_title))
+
+
 
     # 날짜 정제 테스트
     def test_valid_date(self):
