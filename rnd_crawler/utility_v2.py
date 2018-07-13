@@ -65,6 +65,8 @@ def valid_title(title_str):
         .replace('[입찰]', '').replace('제　목', '').replace('새 글', '')
     title_str = title_str.strip()
     title_str = title_str.replace('  ', '').replace('\t', '').replace('\n', '')
+    if title_str[len(title_str)-7:].find('조회') > -1:
+        title_str = title_str[:title_str.find('조회')]
     return title_str
 
 
