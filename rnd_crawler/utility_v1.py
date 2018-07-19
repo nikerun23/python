@@ -645,3 +645,93 @@ def file_download(file_info,download_path):
 
     return file_size
 
+
+# """ 공고 크롤링 정보를 select 합니다 """
+def select_TUN_WEB_CRLN_CNDTN(cursor):
+    # UID를 시퀀스로 조회한다
+    SELECT_QUERY = "select W.WEB_CRLN_ID, W.DEPT_NM, W.ORG_NM, W.BD_NM, W.URL, W.USE_YN, W.ETC_1, W.ETC_2, " \
+                   "W.ELMT_TR_CSS_INF, W.ELMT_TITLE_CSS_INF, W.ELMT_RO_REG_DT_CSS_INF, (select cd_NM from TCO_CD_DTL " \
+                   "where W.ELMT_RO_REG_DT_TYP_CD = CD_DTL_ID) AS ELMT_RO_REG_DT_TYP_CD, W.ELMT_SLNM_CSS_INF, " \
+                   "W.ELMT_RO_URL_CSS_INF, W.ELMT_RO_TITLE_CSS_INF, W.ELMT_RO_BDTXT_CSS_INF, " \
+                   "W.ELMT_RO_START_DT_CSS_INF, W.ELMT_RO_END_DT_CSS_INF, (select cd_NM from TCO_CD_DTL where " \
+                   "W.ELMT_RO_START_END_DT_TYP_CD = CD_DTL_ID) AS ELMT_RO_START_END_DT_TYP_CD, " \
+                   "W.ELMT_RO_FILE_NM_CSS_INF, W.ELMT_RO_FILE_URL_CSS_INF, W.REMARKS from TUN_WEB_CRLN_CNDTN W where W.use_yn = 'N' ORDER BY W.WEB_CRLN_ID"
+    try:
+        cursor.prepare(SELECT_QUERY)
+        cursor.execute(None, '')
+        select_list = cursor.fetchall()
+
+        url_dict_list = []
+        for info in select_list:
+            url_dict = {
+                'SEED_ID': info[0],
+                '부처': info[1],
+                '기관': info[2],
+                '게시판명': info[3],
+                'URL': info[4],
+                'USE_YN': info[5],
+                'ETC_1': '' if info[6] is None else info[6],
+                'ETC_2': '' if info[7] is None else info[7],
+                'TR': info[8],
+                'Title': info[9],
+                'Date': info[10],
+                'DateFormat': '' if info[11] is None else info[11],
+                'ClickCSS': '' if info[12] is None else info[12],
+                'content_url': '' if info[13] is None else info[13],
+                'content_Title': info[14],
+                'content_Body': info[15],
+                'content_StartDate': info[16],
+                'content_EndDate': info[17],
+                'content_DateFormat': info[18],
+                'content_Files': info[19],
+                'content_File_url':  '' if info[20] is None else info[20]
+            }
+            url_dict_list.append(url_dict)
+    except:
+        raise Exception('# 크롤링 정보 Query failed : %s' % SELECT_QUERY)
+    else:
+        return url_dict_list
+
+
+# """" 공고 크롤링 타이틀 키워드 필터링 리스트를 select 합니다 """
+def select_TUN_WEB_CRLN_KWD(cursor):
+    try:
+        # search_keyword 를 select 한다
+        SELECT_QUERY = "select K.KWD from TUN_WEB_CRLN_KWD K LEFT JOIN TCO_CD_DTL C ON K.KWD_TYP_CD = C.CD_DTL_ID where K.USE_YN = 'Y' and C.CD_NM = 'search_keyword' ORDER BY K.KWD_ID"
+        cursor.execute(SELECT_QUERY)
+        search_keywords = cursor.fetchall()
+
+        # ignore_keyword 를 select 한다
+        SELECT_QUERY = "select K.KWD from TUN_WEB_CRLN_KWD K LEFT JOIN TCO_CD_DTL C ON K.KWD_TYP_CD = C.CD_DTL_ID where K.USE_YN = 'Y' and C.CD_NM = 'ignore_keyword' ORDER BY K.KWD_ID"
+        cursor.execute(SELECT_QUERY)
+        ignore_keywords = cursor.fetchall()
+
+        search_keyword_list = []
+        ignore_keyword_list = []
+        for k in search_keywords:
+            search_keyword_list.append(k[0])
+        for k in ignore_keywords:
+            ignore_keyword_list.append(k[0])
+
+        keyword_list = {'search_keyword': search_keyword_list, 'ignore_keyword': ignore_keyword_list}
+    except:
+        raise Exception('# 타이틀 키워드 Query failed : %s' % SELECT_QUERY)
+    else:
+        return keyword_list
+
+
+# """ 부처 코드 SELECT """
+def select_WC_COMPANY_NAME(cursor):
+    try:
+        SELECT_QUERY = "select CD_DTL_ID, CD_NM from TCO_CD_DTL where CD_ID = 400"
+        cursor.execute(SELECT_QUERY)
+
+        select_list = cursor.fetchall()
+        wc_company_list = {}
+
+        for item in select_list:
+            wc_company_list[item[1]] = item[0]
+    except:
+        raise Exception('# 부처 코드 Query failed : %s' % SELECT_QUERY)
+    else:
+        return wc_company_list
