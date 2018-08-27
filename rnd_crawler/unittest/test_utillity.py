@@ -107,7 +107,8 @@ class UtillityTestCase(unittest.TestCase):
                      '''  
                          2018/04/25 ~ 2018/05/08
                         접수중
-                        '''
+                        ''',
+                     '2018-04-25 09:00 ~ 2018-05-08 23:59'
                      }
 
         for dt in date_list:
