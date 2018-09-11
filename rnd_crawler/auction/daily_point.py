@@ -59,15 +59,10 @@ if '__main__' == __name__:
     # 텔레그램 Bot 메세지 보내기
     my_token = '602824143:AAEjqPKSe95ncMH9lDluEKwR_J7BorJUbWE'  # 토큰을 변수에 저장합니다.
     bot = telegram.Bot(token=my_token)  # bot을 선언합니다.
-    print(bot)
     updates = bot.getUpdates()
-    print(updates)
-    for u in updates:
-        print(u.message)
 
     # chat_id = bot.getUpdates()[-1].message.chat.id
     chat_id = '568182246'
-    print(chat_id)
     bot.sendMessage(chat_id=chat_id, text='TEST')
 
     # 옥션 포인트
